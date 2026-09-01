@@ -2,6 +2,8 @@ import db from '@/lib/db';
 import { Users, UserPlus, ArrowRight, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminDashboardPage() {
   const result = await db.execute('SELECT COUNT(*) as count FROM customers');
   const totalCustomers = (result.rows[0] as any)?.count || 0;
