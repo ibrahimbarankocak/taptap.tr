@@ -1,12 +1,8 @@
 import { createClient } from '@libsql/client';
 
-// Eğer .env okunamazsa uygulama direkt çökmesin, hatayı açıkça göstersin
-const url = process.env.TURSO_DATABASE_URL;
-const authToken = process.env.TURSO_AUTH_TOKEN;
-
-if (!url || !authToken) {
-  throw new Error("KRİTİK HATA: TURSO_DATABASE_URL veya TURSO_AUTH_TOKEN bulunamadı! Lütfen .env dosyanı kontrol et.");
-}
+// Vercel build aşamasında veya lokalde değişkenler okunamazsa boş string vererek build'in çökmesini engelliyoruz
+const url = process.env.TURSO_DATABASE_URL || '';
+const authToken = process.env.TURSO_AUTH_TOKEN || '';
 
 const db = createClient({
   url: url,
