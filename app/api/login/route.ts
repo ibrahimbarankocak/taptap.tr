@@ -5,11 +5,12 @@ export async function POST(request: Request) {
   try {
     const { username, password } = await request.json();
 
-    // Admin bilgileri (İleride veritabanına da bağlayabiliriz)
-    const ADMIN_USER = process.env.ADMIN_USER || 'TapTapAdmin';
-    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'umayBaran2575!';
+    // Vercel'den şifreleri çekiyoruz
+    const ADMIN_USER = process.env.ADMIN_USERNAME;
+    const ADMIN_PASS = process.env.ADMIN_PASSWORD;
 
-    if (username === ADMIN_USER && password === ADMIN_PASSWORD) {
+    // Şifreler eşleşirse cookie oluştur ve onayla
+    if (username === ADMIN_USER && password === ADMIN_PASS) {
       const cookieStore = await cookies();
       cookieStore.set('taptap_admin_auth', 'authenticated', {
         httpOnly: true,
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
+    // Eşleşmezse hata döndür
     return NextResponse.json({ success: false, error: 'Kullanıcı adı veya şifre hatalı!' }, { status: 401 });
   } catch (error) {
     return NextResponse.json({ success: false, error: 'Sunucu hatası' }, { status: 500 });
