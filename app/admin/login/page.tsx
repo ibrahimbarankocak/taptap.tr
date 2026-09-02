@@ -1,17 +1,12 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, KeyRound, User, Mail, X } from 'lucide-react';
+import { Lock, KeyRound, User, ShieldAlert } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  // Şifremi unuttum modal state'leri
-  const [showForgotModal, setShowForgotModal] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetLoading, setResetLoading] = useState(false);
 
   const router = useRouter();
 
@@ -39,19 +34,6 @@ export default function AdminLoginPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setResetLoading(true);
-
-    // Simüle edilmiş şifre hatırlatma/sıfırlama isteği
-    setTimeout(() => {
-      alert(`Kurtarma talimatları ${resetEmail} adresine gönderildi (Varsayılan kullanıcı: admin / Şifre: taptap123)`);
-      setResetLoading(false);
-      setShowForgotModal(false);
-      setResetEmail('');
-    }, 1500);
   };
 
   return (
@@ -100,66 +82,21 @@ export default function AdminLoginPage() {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-neutral-200 transition-colors text-sm shadow-lg disabled:opacity-50 mt-2"
+            className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-neutral-200 transition-colors text-sm shadow-lg disabled:opacity-50 mt-2 cursor-pointer"
           >
             {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
           </button>
         </form>
 
-        {/* Şifremi Unuttum Butonu */}
-        <button 
-          type="button"
-          onClick={() => setShowForgotModal(true)}
-          className="text-xs text-neutral-400 hover:text-white mt-5 transition-colors underline underline-offset-4"
-        >
-          Şifremi Unuttum?
-        </button>
+        {/* Bilgilendirme Alanı: Şifremi Unuttum Yerine Statik Uyarı */}
+        <div className="mt-6 pt-4 border-t border-neutral-800/80 w-full text-center">
+          <p className="text-xs text-neutral-400 flex items-center justify-center gap-1.5">
+            <ShieldAlert size={14} className="text-neutral-500" />
+            Şifrenizi unuttuysanız sistem yöneticisi ile iletişime geçin.
+          </p>
+        </div>
 
       </div>
-
-      {/* ŞİFREMİ UNUTTUM MODALI */}
-      {showForgotModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl relative">
-            
-            <button 
-              onClick={() => setShowForgotModal(false)}
-              className="absolute top-5 right-5 text-neutral-400 hover:text-white transition-colors"
-            >
-              <X size={20} />
-            </button>
-
-            <h2 className="text-xl font-bold mb-2">Şifre Sıfırlama</h2>
-            <p className="text-xs text-neutral-400 mb-6">Kayıtlı e-posta adresinizi girin, size geçici sıfırlama talimatları gönderelim.</p>
-
-            <form onSubmit={handleForgotPassword} className="space-y-4">
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-neutral-500">
-                  <Mail size={18} />
-                </span>
-                <input 
-                  type="email" 
-                  required
-                  placeholder="E-posta adresiniz" 
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-10 pr-4 py-3.5 text-white outline-none focus:border-neutral-600 transition-colors text-sm"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={resetLoading}
-                className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-neutral-200 transition-colors text-sm shadow-lg disabled:opacity-50"
-              >
-                {resetLoading ? 'Gönderiliyor...' : 'Talimat Gönder'}
-              </button>
-            </form>
-
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
