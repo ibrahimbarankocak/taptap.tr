@@ -1,6 +1,7 @@
 import db from '@/lib/db';
 import { Users, UserPlus, ArrowRight, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
+import LogoutButton from '@/components/LogoutButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,22 +97,24 @@ export default async function AdminDashboardPage() {
 
         </div>
 
+        {/* Çıkış Yap Butonu */}
+        <LogoutButton />
+
       </div>
+      {/* Çıkış Yap Butonu Doğrudan Entegre */}
+        <div className="w-full mt-12 pt-6 border-t border-neutral-800 flex justify-center">
+          <button
+            onClick={async () => {
+              const res = await fetch('/api/logout', { method: 'POST' });
+              if (res.ok) {
+                window.location.href = '/login';
+              }
+            }}
+            className="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 font-medium px-6 py-3 rounded-xl transition-colors text-sm flex items-center gap-2 cursor-pointer"
+          >
+            Çıkış Yap
+          </button>
+        </div>
     </div>
   );
 }
-// Çıkış fonksiyonu
-const handleLogout = async () => {
-  const res = await fetch('/api/logout', { method: 'POST' });
-  if (res.ok) {
-    window.location.href = '/login'; // Çıkış yapınca login sayfasına atar
-  }
-};
-
-<div className="w-full mt-12 pt-6 border-t border-neutral-800 flex justify-center">
-  <button
-    onClick={handleLogout}
-className="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 font-medium px-6 py-3 rounded-xl transition-colors text-sm flex items-center gap-2"  >
-    Çıkış Yap
-  </button>
-</div>
