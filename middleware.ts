@@ -2,22 +2,27 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
+  const { pathname }  = request.nextUrl;
 
-  // Sadece /admin ile başlayan sayfalara bakıyoruz (ama /admin/login hariç)
-  if (path.startsWith('/admin') && path !== '/admin/login') {
+  // Eğer kullanıcı /admin/login sayfasına gitmeye çalışıyorsa dokunma, geçsin
+  if (pathname === '/admin/login') {
+    return NextResponse.next();
+  }
+
+  // Eğer yol /admin ile başlıyorsa (ve login değilse) güvenliği işlet
+  if (pathname.startsWith('/admin')) {
     const authCookie = request.cookies.get('taptap_admin_auth');
 
-    // Eğer çerez (oturumu) yoksa doğrudan login sayfasına postalıyoruz
+    // Çerez yoksa veya 'authenticated' değilse şutla login'e
     if (!authCookie || authCookie.value !== 'authenticated') {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+      const loginUrl = new URL('/admin/login', request.url);
+      return NextResponse.redirect(loginUrl);
     }
   }
 
   return NextResponse.next();
 }
 
-// Hangi yollarda bu kalkanın çalışacağını belirtiyoruz
 export const config = {
-  matcher: '/admin/:path*',
+  matcher: ['/admin/:path*'],
 };
