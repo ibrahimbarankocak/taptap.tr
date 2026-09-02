@@ -4,8 +4,7 @@ export default function LogoutButton() {
   const handleLogout = async () => {
     const res = await fetch('/api/logout', { method: 'POST' });
     if (res.ok) {
-      // Tam yönlendirme yolunu kök dizine göre netleştiriyoruz
-      window.location.href = '/login'; 
+      window.location.href = '/admin/login'; 
     }
   };
 
