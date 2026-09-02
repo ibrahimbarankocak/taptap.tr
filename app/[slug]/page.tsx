@@ -1,3 +1,4 @@
+import InstaZoomImage from '@/components/InstaZoomImage';
 import db from '@/lib/db';
 import { notFound } from 'next/navigation';
 // Arayüz ikonları Lucide'dan
@@ -45,12 +46,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ slug: 
       
       <div className="w-full max-w-sm bg-neutral-900 rounded-3xl p-8 shadow-2xl flex flex-col items-center border border-neutral-800">
         
-        {/* Profil Fotoğrafı */}
+        {/* Profil Fotoğrafı - InstaZoom Entegre Edildi */}
         {customer.profile_image ? (
-          <img 
+          <InstaZoomImage 
             src={customer.profile_image} 
             alt={customer.full_name} 
-            className="w-32 h-32 rounded-full border-4 border-neutral-700 object-cover mb-6 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+            className="w-32 h-32 rounded-full border-4 border-neutral-700 mb-6 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
           />
         ) : (
           <div className="w-32 h-32 bg-neutral-800 rounded-full border-4 border-neutral-700 flex items-center justify-center text-5xl font-bold mb-6 shadow-inner">
