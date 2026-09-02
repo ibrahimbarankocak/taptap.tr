@@ -6,8 +6,8 @@ export async function POST(request: Request) {
     const { username, password } = await request.json();
 
     // Admin bilgileri (İleride veritabanına da bağlayabiliriz)
-    const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'taptap123';
+    const ADMIN_USER = process.env.ADMIN_USER || 'TapTapAdmin';
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'umayBaran2575!';
 
     if (username === ADMIN_USER && password === ADMIN_PASSWORD) {
       const cookieStore = await cookies();
