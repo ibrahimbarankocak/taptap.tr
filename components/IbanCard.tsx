@@ -9,9 +9,9 @@ export default function IbanCard({ customer }: { customer: any }) {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('IBAN Kopyalandı');
 
-  // Sayfa açılır açılmaz IBAN'ı otomatik kopyalama
+  // Sayfa açılır açılmaz IBAN'ı otomatik kopyalama denemesi
   useEffect(() => {
-    if (customer.iban) {
+    if (customer.iban && navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(customer.iban).then(() => {
         setToastMessage('IBAN Kopyalandı');
         setShowToast(true);
@@ -20,26 +20,56 @@ export default function IbanCard({ customer }: { customer: any }) {
     }
   }, [customer.iban]);
 
-  const handleCopyIban = () => {
-    if (customer.iban) {
-      navigator.clipboard.writeText(customer.iban);
+  const handleCopyIban = async () => {
+    if (!customer.iban) return;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(customer.iban);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = customer.iban;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
       setCopiedIban(true);
       setToastMessage('IBAN Kopyalandı');
       setShowToast(true);
       setTimeout(() => setCopiedIban(false), 2000);
       setTimeout(() => setShowToast(false), 3000);
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const handleCopyHolder = () => {
+  const handleCopyHolder = async () => {
     const holderName = customer.account_holder || customer.full_name;
-    if (holderName) {
-      navigator.clipboard.writeText(holderName);
+    if (!holderName) return;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(holderName);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = holderName;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
       setCopiedHolder(true);
       setToastMessage('Hesap Sahibi Kopyalandı');
       setShowToast(true);
       setTimeout(() => setCopiedHolder(false), 2000);
       setTimeout(() => setShowToast(false), 3000);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -84,7 +114,7 @@ export default function IbanCard({ customer }: { customer: any }) {
           >
             {copiedIban ? <Check size={16} strokeWidth={2.5} /> : <Copy size={16} strokeWidth={2.5} />}
             <span className="text-[8px] font-bold tracking-wider">
-              {copiedIban ? 'ALINDI' : 'KOPYALA'}
+              {copiedIban ? 'KOPYALANDI' : 'KOPYALA'}
             </span>
           </button>
         </div>
@@ -110,14 +140,14 @@ export default function IbanCard({ customer }: { customer: any }) {
           >
             {copiedHolder ? <Check size={16} strokeWidth={2.5} /> : <Copy size={16} strokeWidth={2.5} />}
             <span className="text-[8px] font-bold tracking-wider">
-              {copiedHolder ? 'ALINDI' : 'KOPYALA'}
+              {copiedHolder ? 'KOPYALANDI' : 'KOPYALA'}
             </span>
           </button>
         </div>
 
       </div>
 
-      {/* --- 3. ALT KISIM: SOLUK HALKALAR VE BUTONLAR (BİR TIK YUKARI ALINDI) --- */}
+      {/* --- 3. ALT KISIM: SOLUK HALKALAR VE RESMİ TAPTAP KANALLARI --- */}
       <div className="relative h-[22vh] w-full flex flex-col items-center justify-start z-10">
         
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] pointer-events-none">
@@ -144,27 +174,44 @@ export default function IbanCard({ customer }: { customer: any }) {
 
         <div className="absolute left-1/2 -translate-x-1/2 bottom-[-20px] w-[480px] h-[140px] bg-[#D97706]/10 blur-[70px] rounded-full pointer-events-none"></div>
 
-        {/* Butonlar yukarı taşındı */}
-        <div className="relative z-20 flex items-center justify-center gap-3 mt-2">
-          <a 
-            href="https://www.instagram.com/taptap.tr/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-[#0f0f0f]/90 backdrop-blur-md hover:bg-[#1a1a1a] border border-[#1f1f1f] hover:border-neutral-700 text-neutral-400 hover:text-white px-4 py-3 rounded-2xl transition-all duration-300 shadow-lg active:scale-95"
-          >
-            <FaInstagram size={16} />
-            <span className="text-[10px] font-bold tracking-widest uppercase mt-0.5">Instagram</span>
-          </a>
+        {/* Resmi Kanallar ve Butonlar */}
+        <div className="relative z-20 flex flex-col items-center gap-2 mt-2">
+          
+          <span className="text-[9px] font-bold tracking-[0.2em] text-neutral-500 uppercase">
+            TapTap Resmi Kanalları
+          </span>
 
-          <a 
-            href="https://www.shopier.com/TapTapTr" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-[#0f0f0f]/90 backdrop-blur-md hover:bg-[#1a1a1a] border border-[#1f1f1f] hover:border-neutral-700 text-neutral-400 hover:text-white px-4 py-3 rounded-2xl transition-all duration-300 shadow-lg active:scale-95"
-          >
-            <ShoppingBag size={16} />
-            <span className="text-[10px] font-bold tracking-widest uppercase mt-0.5">Sipariş Ver</span>
-          </a>
+          <div className="flex items-center gap-3">
+            <a 
+              href="https://www.instagram.com/taptap.tr/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 bg-[#0f0f0f]/90 backdrop-blur-md hover:bg-[#1a1a1a] border border-[#1f1f1f] hover:border-neutral-700 text-neutral-300 hover:text-white px-4.5 py-3 rounded-2xl transition-all duration-300 shadow-lg active:scale-95"
+            >
+              <FaInstagram size={16} className="text-orange-500" />
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] font-bold tracking-wider uppercase leading-tight">Instagram</span>
+                <span className="text-[9px] text-neutral-500 font-mono">@taptap.tr</span>
+              </div>
+            </a>
+
+            <a 
+              href="https://www.shopier.com/TapTapTr" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 bg-[#0f0f0f]/90 backdrop-blur-md hover:bg-[#1a1a1a] border border-[#1f1f1f] hover:border-neutral-700 text-neutral-300 hover:text-white px-4.5 py-3 rounded-2xl transition-all duration-300 shadow-lg active:scale-95"
+            >
+              <ShoppingBag size={16} className="text-orange-500" />
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] font-bold tracking-wider uppercase leading-tight">Shopier</span>
+                <span className="text-[9px] text-neutral-500 font-mono">TapTapTr</span>
+              </div>
+            </a>
+          </div>
+
+          <span className="text-[8px] font-bold tracking-[0.25em] text-neutral-600 uppercase mt-0.5">
+            TapTap Güvenceli Ödeme Altyapısı
+          </span>
         </div>
 
       </div>
