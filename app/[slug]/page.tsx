@@ -1,9 +1,8 @@
 import InstaZoomImage from '@/components/InstaZoomImage';
+import IbanCard from '@/components/IbanCard';
 import db from '@/lib/db';
 import { notFound } from 'next/navigation';
-// Arayüz ikonları Lucide'dan
 import { Globe, MapPin, CreditCard, Phone, Mail } from 'lucide-react';
-// Marka logoları React Icons'dan
 import { FaInstagram, FaLinkedin, FaTwitter, FaYoutube } from 'react-icons/fa';
 
 // Platforma göre doğru ikonu döndüren yardımcı fonksiyon
@@ -21,7 +20,7 @@ const getSocialIcon = (platform: string) => {
 export default async function ProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  // 1. Müşteri verisini çek (Asenkron Turso)
+  // 1. Müşteri verisini çek
   const customerResult = await db.execute({
     sql: 'SELECT * FROM customers WHERE slug = ?',
     args: [slug]
@@ -33,7 +32,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ slug: 
     notFound();
   }
 
-  // 2. Bu müşteriye ait sosyal medya linklerini çek (Asenkron Turso)
+  // --- IBAN KART KONTROLÜ ---
+  // Eğer müşteri IBAN kartı olarak ayarlanmışsa, doğrudan yeni bileşeni render et
+  if (customer.card_type === 'iban') {
+    return <IbanCard customer={customer} />;
+  }
+  // --------------------------
+
+  // 2. Bu müşteriye ait sosyal medya linklerini çek (Sadece Premium için)
   const linksResult = await db.execute({
     sql: 'SELECT * FROM social_links WHERE customer_id = ?',
     args: [customer.id]
@@ -41,12 +47,13 @@ export default async function ProfilePage({ params }: { params: Promise<{ slug: 
   
   const socialLinks = linksResult.rows as any[];
 
+  // PREMIUM KART (Mevcut Tasarım)
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col items-center py-12 px-4 font-sans">
       
       <div className="w-full max-w-sm bg-neutral-900 rounded-3xl p-8 shadow-2xl flex flex-col items-center border border-neutral-800">
         
-        {/* Profil Fotoğrafı - InstaZoom Entegre Edildi */}
+        {/* Profil Fotoğrafı */}
         {customer.profile_image ? (
           <InstaZoomImage 
             src={customer.profile_image} 
@@ -96,7 +103,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ slug: 
           </div>
         )}
 
-        {/* IBAN ve Adres (Sadece girilmişse render olur) */}
+        {/* IBAN ve Adres */}
         {(customer.iban || customer.address) && (
           <div className="w-full space-y-4 mb-8 bg-neutral-950 p-5 rounded-2xl border border-neutral-800">
             {customer.iban && (
@@ -121,7 +128,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ slug: 
           </div>
         )}
 
-        {/* Rehbere Ekle Butonu (Aktif) */}
+        {/* Rehbere Ekle Butonu */}
         <a 
           href={`/${slug}/vcard`} 
           className="w-full flex justify-center bg-white text-black font-bold py-4 rounded-xl hover:bg-neutral-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.15)] mb-6"
@@ -129,7 +136,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ slug: 
           Kişilere Ekle
         </a>
 
-        {/* KART İÇİ TAM ORTALANMIŞ LOGO VE METİN */}
+        {/* KART İÇİ LOGO */}
         <div className="w-full pt-5 border-t border-neutral-800/80 flex flex-col items-center">
           <a href="https://taptap.tr" target="_blank" className="flex flex-col items-center gap-1.5 group opacity-80 hover:opacity-100 transition-opacity w-fit">
             <img src="/logo.jpeg" alt="TapTap" className="w-28 h-auto object-contain rounded-xl border border-neutral-800 shadow-lg bg-neutral-950 p-1.5" />
@@ -141,7 +148,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ slug: 
         </div>
 
       </div>
-      
     </div>
   );
 }

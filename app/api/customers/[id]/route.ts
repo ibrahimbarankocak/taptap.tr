@@ -50,6 +50,7 @@ export async function PUT(
     const {
       full_name,
       slug,
+      card_type,
       job_title,
       company,
       phone,
@@ -72,11 +73,12 @@ export async function PUT(
 
     await db.execute({
       sql: `UPDATE customers 
-            SET full_name = ?, slug = ?, job_title = ?, company = ?, phone = ?, email = ?, iban = ?, address = ?, profile_image = ?
+            SET full_name = ?, slug = ?, card_type = ?, job_title = ?, company = ?, phone = ?, email = ?, iban = ?, address = ?, profile_image = ?
             WHERE id = ?`,
       args: [
         full_name,
         slug.trim().toLowerCase(),
+        card_type || 'premium', // Kart tipini ekledik
         job_title || '',
         company || '',
         phone || '',
