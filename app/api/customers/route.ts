@@ -13,18 +13,21 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { full_name, slug, job_title, company, phone, email, iban, address, instagram, linkedin, twitter, website, profile_image } = body;
+    const { 
+      full_name, slug, card_type, job_title, company, phone, email, iban, address, instagram, linkedin, twitter, website, profile_image 
+    } = body;
 
     if (!full_name || !slug) {
       return NextResponse.json({ success: false, error: 'Ad Soyad ve Slug alanları zorunludur.' }, { status: 400 });
     }
 
     const insertCustomer = await db.execute({
-      sql: `INSERT INTO customers (full_name, slug, job_title, company, phone, email, iban, address, profile_image)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+      sql: `INSERT INTO customers (full_name, slug, card_type, job_title, company, phone, email, iban, address, profile_image)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
       args: [
         full_name, 
         slug.trim().toLowerCase(), 
+        card_type || 'premium', // Kart tipini ekledik, boş gelirse premium ata
         job_title || '', 
         company || '', 
         phone || '', 

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, UserPlus, Save, ImagePlus, Camera, X, Check } from 'lucide-react';
+import { ArrowLeft, UserPlus, Save, ImagePlus, Camera, X, Check, CreditCard, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import Cropper from 'react-easy-crop';
 
@@ -43,6 +43,7 @@ export default function NewCustomerPage() {
   const [formData, setFormData] = useState({
     full_name: '',
     slug: '',
+    card_type: 'premium', // KART TİPİ EKLENDİ (Varsayılan: premium)
     job_title: '',
     company: '',
     phone: '',
@@ -79,7 +80,7 @@ export default function NewCustomerPage() {
         setShowCropModal(true);
       };
       reader.readAsDataURL(file);
-      e.target.value = ''; // Input'u sıfırla ki aynı resmi tekrar seçebilsin
+      e.target.value = '';
     }
   };
 
@@ -171,6 +172,40 @@ export default function NewCustomerPage() {
             <p className="text-xs text-neutral-500 mt-3">Tıkla ve fotoğraf seç</p>
           </div>
 
+          {/* KART TİPİ SEÇİMİ (YENİ) */}
+          <div>
+            <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">Kart Tipi Seçimi</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, card_type: 'premium' })}
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+                  formData.card_type === 'premium'
+                    ? 'bg-neutral-800 border-white text-white shadow-lg'
+                    : 'bg-neutral-950 border-neutral-800 text-neutral-500 hover:border-neutral-700'
+                }`}
+              >
+                <CreditCard size={28} className="mb-2" />
+                <span className="font-bold text-sm">Premium Profil</span>
+                <span className="text-[10px] mt-1 text-center opacity-70">Tüm sosyal linkler ve detaylar</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, card_type: 'iban' })}
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+                  formData.card_type === 'iban'
+                    ? 'bg-orange-500/10 border-orange-500 text-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.15)]'
+                    : 'bg-neutral-950 border-neutral-800 text-neutral-500 hover:border-neutral-700'
+                }`}
+              >
+                <Wallet size={28} className="mb-2" />
+                <span className="font-bold text-sm">IBAN Kartı</span>
+                <span className="text-[10px] mt-1 text-center opacity-70">Turuncu konseptli anında IBAN kopyalama</span>
+              </button>
+            </div>
+          </div>
+
           {/* Temel Bilgiler */}
           <div>
             <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">Temel Bilgiler</h3>
@@ -183,67 +218,89 @@ export default function NewCustomerPage() {
                 <label className="block text-xs font-medium text-neutral-400 mb-1.5">Profil URL Uzantısı (Slug) *</label>
                 <input type="text" name="slug" required className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors font-mono" value={formData.slug} onChange={handleChange} />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">Unvan / Pozisyon</label>
-                <input type="text" name="job_title" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.job_title} onChange={handleChange} />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">Şirket / Kurum</label>
-                <input type="text" name="company" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.company} onChange={handleChange} />
-              </div>
+              
+              {/* IBAN seçili değilse Unvan ve Şirket göster */}
+              {formData.card_type === 'premium' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-400 mb-1.5">Unvan / Pozisyon</label>
+                    <input type="text" name="job_title" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.job_title} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-400 mb-1.5">Şirket / Kurum</label>
+                    <input type="text" name="company" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.company} onChange={handleChange} />
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
-          {/* İletişim Bilgileri */}
-          <div>
-            <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">İletişim Bilgileri</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* İletişim ve Sosyal Medya (Sadece Premium için görünür) */}
+          {formData.card_type === 'premium' && (
+            <>
               <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">Telefon Numarası</label>
-                <input type="text" name="phone" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.phone} onChange={handleChange} />
+                <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">İletişim Bilgileri</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-400 mb-1.5">Telefon Numarası</label>
+                    <input type="text" name="phone" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.phone} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-400 mb-1.5">E-posta Adresi</label>
+                    <input type="email" name="email" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.email} onChange={handleChange} />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">E-posta Adresi</label>
-                <input type="email" name="email" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.email} onChange={handleChange} />
-              </div>
-            </div>
-          </div>
 
-          {/* Sosyal Medya Linkleri */}
-          <div>
-            <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">Sosyal Medya & Web</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">Instagram URL</label>
-                <input type="url" name="instagram" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.instagram} onChange={handleChange} />
+                <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">Sosyal Medya & Web</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-400 mb-1.5">Instagram URL</label>
+                    <input type="url" name="instagram" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.instagram} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-400 mb-1.5">LinkedIn URL</label>
+                    <input type="url" name="linkedin" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.linkedin} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-400 mb-1.5">Twitter / X URL</label>
+                    <input type="url" name="twitter" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.twitter} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-400 mb-1.5">Website / Diğer URL</label>
+                    <input type="url" name="website" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.website} onChange={handleChange} />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">LinkedIn URL</label>
-                <input type="url" name="linkedin" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.linkedin} onChange={handleChange} />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">Twitter / X URL</label>
-                <input type="url" name="twitter" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.twitter} onChange={handleChange} />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">Website / Diğer URL</label>
-                <input type="url" name="website" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.website} onChange={handleChange} />
-              </div>
-            </div>
-          </div>
+            </>
+          )}
 
-          {/* Finansal & Konum Bilgileri */}
+          {/* Finansal & Konum Bilgileri (İkisi için de görünür) */}
           <div>
-            <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">IBAN ve Adres</h3>
+            <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">
+              {formData.card_type === 'iban' ? 'IBAN Bilgisi (Zorunlu)' : 'IBAN ve Adres'}
+            </h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-neutral-400 mb-1.5">IBAN</label>
-                <input type="text" name="iban" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 font-mono transition-colors" value={formData.iban} onChange={handleChange} />
+                <input 
+                  type="text" 
+                  name="iban" 
+                  required={formData.card_type === 'iban'} // IBAN seçiliyse IBAN alanı zorunlu olur
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 font-mono transition-colors" 
+                  value={formData.iban} 
+                  onChange={handleChange} 
+                />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">Adres</label>
-                <textarea name="address" rows={2} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors resize-none" value={formData.address} onChange={handleChange} />
-              </div>
+              
+              {/* Sadece Premium ise adresi göster */}
+              {formData.card_type === 'premium' && (
+                <div>
+                  <label className="block text-xs font-medium text-neutral-400 mb-1.5">Adres</label>
+                  <textarea name="address" rows={2} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors resize-none" value={formData.address} onChange={handleChange} />
+                </div>
+              )}
             </div>
           </div>
 
