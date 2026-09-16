@@ -86,7 +86,7 @@ export default function IbanCard({ customer }: { customer: any }) {
       </div>
 
       {/* --- 2. ORTA KISIM: İŞLETME ADI VE BİLGİ KUTULARI --- */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full px-4 z-20 py-4 gap-3">
+      <div className="flex-1 flex flex-col items-center justify-center w-full px-4 z-20 py-2 gap-3">
         
         {/* İşletme Adı / Başlık */}
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-1">
@@ -147,8 +147,8 @@ export default function IbanCard({ customer }: { customer: any }) {
 
       </div>
 
-      {/* --- 3. ALT KISIM: SOLUK HALKALAR VE RESMİ TAPTAP KANALLARI --- */}
-      <div className="relative h-[22vh] w-full flex flex-col items-center justify-start z-10">
+      {/* --- 3. ALT KISIM: SOLUK HALKALAR VE RESMİ TAPTAP KANALLARI (3 birim yukarıda) --- */}
+      <div className="relative h-[25vh] w-full flex flex-col items-center justify-start z-10 pt-2">
         
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] pointer-events-none">
           <svg viewBox="0 0 800 800" className="w-full h-full block" fill="none">
@@ -174,8 +174,8 @@ export default function IbanCard({ customer }: { customer: any }) {
 
         <div className="absolute left-1/2 -translate-x-1/2 bottom-[-20px] w-[480px] h-[140px] bg-[#D97706]/10 blur-[70px] rounded-full pointer-events-none"></div>
 
-        {/* Resmi Kanallar ve Butonlar (Zımbırtı yazı uçuruldu) */}
-        <div className="relative z-20 flex flex-col items-center gap-2 mt-2">
+        {/* Resmi Kanallar ve Butonlar (Satın Al yazıldı ve yukarı çekildi) */}
+        <div className="relative z-20 flex flex-col items-center gap-2">
           
           <span className="text-[9px] font-bold tracking-[0.2em] text-neutral-500 uppercase">
             TapTap Resmi Kanalları
@@ -203,7 +203,7 @@ export default function IbanCard({ customer }: { customer: any }) {
             >
               <ShoppingBag size={16} className="text-orange-500" />
               <div className="flex flex-col text-left">
-                <span className="text-[10px] font-bold tracking-wider uppercase leading-tight">Shopier</span>
+                <span className="text-[10px] font-bold tracking-wider uppercase leading-tight">Satın Al</span>
                 <span className="text-[9px] text-neutral-500 font-mono">TapTapTr</span>
               </div>
             </a>
