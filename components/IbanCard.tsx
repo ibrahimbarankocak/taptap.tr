@@ -1,54 +1,45 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Check, Copy, ShoppingBag } from 'lucide-react';
+import { Check, Copy, ShoppingBag, User } from 'lucide-react';
 import { FaInstagram } from 'react-icons/fa';
 
 export default function IbanCard({ customer }: { customer: any }) {
-  const [copied, setCopied] = useState(false);
+  const [copiedIban, setCopiedIban] = useState(false);
+  const [copiedHolder, setCopiedHolder] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('IBAN Kopyalandı');
 
-  // 1. OTOMATİK KOPYALAMA (PC'lerde çalışır, Mobilde güvenlik nedeniyle tarayıcı engelleyebilir)
+  // Sayfa açılır açılmaz IBAN'ı otomatik kopyalama
   useEffect(() => {
-    if (customer.iban && navigator.clipboard && window.isSecureContext) {
+    if (customer.iban) {
       navigator.clipboard.writeText(customer.iban).then(() => {
+        setToastMessage('IBAN Kopyalandı');
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
-      }).catch(() => {
-        console.log('Mobil tarayıcı otomatik kopyalamayı engelledi. Manuel kopyalama bekleniyor.');
-      });
+      }).catch(() => {});
     }
   }, [customer.iban]);
 
-  // 2. MANUEL KOPYALAMA (Mobilde %100 çalışacak garantili sistem)
-  const handleCopy = async () => {
-    if (!customer.iban) return;
-
-    try {
-      // Modern tarayıcılar için
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(customer.iban);
-      } else {
-        // iOS Safari ve eski mobil tarayıcılar için garantili yedek yöntem
-        const textArea = document.createElement("textarea");
-        textArea.value = customer.iban;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        textArea.style.top = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        document.execCommand('copy');
-        textArea.remove();
-      }
-      
-      // Kopyalama başarılı olunca hem butonu hem toast bildirimi tetikle
-      setCopied(true);
+  const handleCopyIban = () => {
+    if (customer.iban) {
+      navigator.clipboard.writeText(customer.iban);
+      setCopiedIban(true);
+      setToastMessage('IBAN Kopyalandı');
       setShowToast(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopiedIban(false), 2000);
       setTimeout(() => setShowToast(false), 3000);
-    } catch (error) {
-      console.error('Kopyalama hatası:', error);
-      alert('Kopyalama başarısız oldu, lütfen manuel kopyalayın.');
+    }
+  };
+
+  const handleCopyHolder = () => {
+    const holderName = customer.account_holder || customer.full_name;
+    if (holderName) {
+      navigator.clipboard.writeText(holderName);
+      setCopiedHolder(true);
+      setToastMessage('Hesap Sahibi Kopyalandı');
+      setShowToast(true);
+      setTimeout(() => setCopiedHolder(false), 2000);
+      setTimeout(() => setShowToast(false), 3000);
     }
   };
 
@@ -64,42 +55,70 @@ export default function IbanCard({ customer }: { customer: any }) {
         </div>
       </div>
 
-      {/* --- 2. ORTA KISIM: İSİM VE IBAN KUTUSU --- */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full px-4 z-20 pb-4">
+      {/* --- 2. ORTA KISIM: İŞLETME ADI VE BİLGİ KUTULARI --- */}
+      <div className="flex-1 flex flex-col items-center justify-center w-full px-4 z-20 pb-4 gap-4">
         
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-8 text-center">
+        {/* İşletme Adı / Başlık */}
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-2">
           {customer.full_name}
         </h1>
 
+        {/* IBAN KUTUSU */}
         <div className="w-full max-w-[360px] bg-[#0f0f0f] border border-[#1f1f1f] rounded-[24px] p-4 sm:p-5 flex items-center justify-between gap-2 sm:gap-3 shadow-2xl">
-          
           <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
             <span className="text-[9px] sm:text-[10px] text-neutral-500 font-bold tracking-[0.15em] mb-1.5 uppercase">
-              Banka Hesabı
+              Banka Hesabı (IBAN)
             </span>
             <span className="font-mono text-[10px] sm:text-[12px] text-white tracking-tighter sm:tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
               {customer.iban}
             </span>
           </div>
 
-        <button
-            onClick={handleCopy}
-            className={`flex flex-col items-center justify-center gap-1 sm:gap-1.5 w-[64px] sm:w-[72px] h-[56px] sm:h-[64px] rounded-2xl border transition-all duration-300 shrink-0 ${
-              copied 
+          <button
+            onClick={handleCopyIban}
+            className={`flex flex-col items-center justify-center gap-1 sm:gap-1.5 w-[64px] sm:w-[72px] h-[56px] sm:h-[64px] rounded-2xl border transition-all duration-300 shrink-0 cursor-pointer ${
+              copiedIban 
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' 
                 : 'bg-[#F59E0B]/5 border-[#F59E0B]/20 hover:bg-[#F59E0B]/10 hover:border-[#F59E0B]/40 text-[#F59E0B]'
             }`}
           >
-            {copied ? <Check size={18} strokeWidth={2.5} /> : <Copy size={18} strokeWidth={2.5} />}
+            {copiedIban ? <Check size={18} strokeWidth={2.5} /> : <Copy size={18} strokeWidth={2.5} />}
             <span className="text-[8px] sm:text-[9px] font-bold tracking-wider">
-              {copied ? 'KOPYALANDI' : 'KOPYALA'}
+              {copiedIban ? 'ALINDI' : 'KOPYALA'}
             </span>
           </button>
         </div>
+
+        {/* HESAP SAHİBİ KUTUSU */}
+        <div className="w-full max-w-[360px] bg-[#0f0f0f] border border-[#1f1f1f] rounded-[24px] p-4 sm:p-5 flex items-center justify-between gap-2 sm:gap-3 shadow-2xl">
+          <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+            <span className="text-[9px] sm:text-[10px] text-neutral-500 font-bold tracking-[0.15em] mb-1.5 uppercase">
+              Hesap Sahibi Ad Soyad
+            </span>
+            <span className="text-sm sm:text-base font-semibold text-white tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">
+              {customer.account_holder || customer.full_name}
+            </span>
+          </div>
+
+          <button
+            onClick={handleCopyHolder}
+            className={`flex flex-col items-center justify-center gap-1 sm:gap-1.5 w-[64px] sm:w-[72px] h-[56px] sm:h-[64px] rounded-2xl border transition-all duration-300 shrink-0 cursor-pointer ${
+              copiedHolder 
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' 
+                : 'bg-[#F59E0B]/5 border-[#F59E0B]/20 hover:bg-[#F59E0B]/10 hover:border-[#F59E0B]/40 text-[#F59E0B]'
+            }`}
+          >
+            {copiedHolder ? <Check size={18} strokeWidth={2.5} /> : <Copy size={18} strokeWidth={2.5} />}
+            <span className="text-[8px] sm:text-[9px] font-bold tracking-wider">
+              {copiedHolder ? 'ALINDI' : 'KOPYALA'}
+            </span>
+          </button>
+        </div>
+
       </div>
 
-      {/* --- 3. ALT KISIM: SOLUK, ARALIKLI HALKALAR VE BUTONLAR --- */}
-      <div className="relative h-[30vh] w-full flex flex-col items-center justify-center z-10">
+      {/* --- 3. ALT KISIM: SOLUK HALKALAR VE BUTONLAR --- */}
+      <div className="relative h-[25vh] w-full flex flex-col items-center justify-center z-10">
         
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] pointer-events-none">
           <svg viewBox="0 0 800 800" className="w-full h-full block" fill="none">
@@ -125,7 +144,7 @@ export default function IbanCard({ customer }: { customer: any }) {
 
         <div className="absolute left-1/2 -translate-x-1/2 bottom-[-50px] w-[480px] h-[170px] bg-[#D97706]/10 blur-[70px] rounded-full pointer-events-none"></div>
 
-        <div className="relative z-20 flex items-center justify-center gap-3 sm:gap-4 mt-8">
+        <div className="relative z-20 flex items-center justify-center gap-3 sm:gap-4 mt-6">
           <a 
             href="https://www.instagram.com/taptap.tr/" 
             target="_blank" 
@@ -149,7 +168,7 @@ export default function IbanCard({ customer }: { customer: any }) {
 
       </div>
 
-      {/* --- 4. OTOMATİK KOPYALAMA BİLDİRİMİ (Toast) --- */}
+      {/* --- 4. BİLDİRİM TOAST --- */}
       <div 
         className={`fixed top-10 left-1/2 -translate-x-1/2 bg-[#111] border border-[#222] text-white px-5 py-3 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 flex items-center gap-3 transition-all duration-500 ease-out ${
           showToast ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-10 scale-95 pointer-events-none'
@@ -158,7 +177,7 @@ export default function IbanCard({ customer }: { customer: any }) {
         <div className="bg-emerald-500 rounded-full p-1">
           <Check size={12} className="text-white" strokeWidth={3} />
         </div>
-        <span className="font-bold text-xs tracking-wide">IBAN Kopyalandı</span>
+        <span className="font-bold text-xs tracking-wide">{toastMessage}</span>
       </div>
 
     </div>

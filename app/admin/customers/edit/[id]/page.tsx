@@ -5,7 +5,6 @@ import { ArrowLeft, Save, ImagePlus, Camera, X, Check, CreditCard, Wallet, Edit3
 import Link from 'next/link';
 import Cropper from 'react-easy-crop';
 
-// --- Kırpma İşlemi İçin Yardımcı Fonksiyonlar ---
 const createImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
     const image = new Image();
@@ -24,30 +23,19 @@ async function getCroppedImg(
   if (!ctx) return '';
   canvas.width = 512;
   canvas.height = 512;
-  ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    512,
-    512
-  );
+  ctx.drawImage(image, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, 512, 512);
   return canvas.toDataURL('image/jpeg', 0.9);
 }
-// ------------------------------------------------
 
 export default function EditCustomerPage({ params }: { params: any }) {
-  // Next.js params
   const id = params?.id;
   const router = useRouter();
 
   const [formData, setFormData] = useState({
     full_name: '',
     slug: '',
-    card_type: 'premium', // Yeni özelliğimiz
+    card_type: 'premium',
+    account_holder: '',
     job_title: '',
     company: '',
     phone: '',
@@ -64,14 +52,12 @@ export default function EditCustomerPage({ params }: { params: any }) {
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
 
-  // Kırpma Modal State'leri
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
   const [showCropModal, setShowCropModal] = useState(false);
 
-  // Müşteri verilerini veritabanından çekme
   useEffect(() => {
     if (!id) return;
     fetch(`/api/customers/${id}`)
@@ -83,7 +69,8 @@ export default function EditCustomerPage({ params }: { params: any }) {
           setFormData({
             full_name: c.full_name || '',
             slug: c.slug || '',
-            card_type: c.card_type || 'premium', // Eğer eski bir kayıt ise varsayılan premium olacak
+            card_type: c.card_type || 'premium',
+            account_holder: c.account_holder || '',
             job_title: c.job_title || '',
             company: c.company || '',
             phone: c.phone || '',
@@ -145,7 +132,7 @@ export default function EditCustomerPage({ params }: { params: any }) {
     setLoading(true);
     try {
       const res = await fetch(`/api/customers/${id}`, {
-        method: 'PUT', // Düzenleme işlemi için PUT kullanıyoruz
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
@@ -189,43 +176,36 @@ export default function EditCustomerPage({ params }: { params: any }) {
 
         <form onSubmit={handleSubmit} className="space-y-6 bg-neutral-900 border border-neutral-800 rounded-3xl p-6 md:p-8 shadow-2xl">
           
-          {/* PROFİL FOTOĞRAFI ALANI */}
-          <div className="flex flex-col items-center justify-center mb-6 pb-6 border-b border-neutral-800">
-            <div className="relative group cursor-pointer">
-              <input 
-                type="file" 
-                accept="image/*" 
-                className="hidden" 
-                id="profile-upload"
-                onChange={handleFileChange}
-              />
-              <label htmlFor="profile-upload" className="block cursor-pointer">
-                {formData.profile_image ? (
-                  <div className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-neutral-800 shadow-xl group-hover:border-neutral-600 transition-all">
-                    <img src={formData.profile_image} alt="Profile" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Camera size={24} className="text-white" />
+          {formData.card_type === 'premium' && (
+            <div className="flex flex-col items-center justify-center mb-6 pb-6 border-b border-neutral-800">
+              <div className="relative group cursor-pointer">
+                <input type="file" accept="image/*" className="hidden" id="profile-upload" onChange={handleFileChange} />
+                <label htmlFor="profile-upload" className="block cursor-pointer">
+                  {formData.profile_image ? (
+                    <div className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-neutral-800 shadow-xl group-hover:border-neutral-600 transition-all">
+                      <img src={formData.profile_image} alt="Profile" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera size={24} className="text-white" />
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="w-28 h-28 rounded-full bg-neutral-950 border-4 border-neutral-800 border-dashed shadow-xl flex flex-col items-center justify-center text-neutral-500 group-hover:border-neutral-600 group-hover:text-neutral-300 transition-all">
-                    <ImagePlus size={28} className="mb-1" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Yükle</span>
-                  </div>
-                )}
-              </label>
+                  ) : (
+                    <div className="w-28 h-28 rounded-full bg-neutral-950 border-4 border-neutral-800 border-dashed shadow-xl flex flex-col items-center justify-center text-neutral-500 group-hover:border-neutral-600 group-hover:text-neutral-300 transition-all">
+                      <ImagePlus size={28} className="mb-1" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Yükle</span>
+                    </div>
+                  )}
+                </label>
+              </div>
             </div>
-            <p className="text-xs text-neutral-500 mt-3">Değiştirmek için tıkla</p>
-          </div>
+          )}
 
-          {/* KART TİPİ SEÇİMİ */}
           <div>
             <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">Kart Tipi Seçimi</h3>
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, card_type: 'premium' })}
-                className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                   formData.card_type === 'premium'
                     ? 'bg-neutral-800 border-white text-white shadow-lg'
                     : 'bg-neutral-950 border-neutral-800 text-neutral-500 hover:border-neutral-700'
@@ -239,7 +219,7 @@ export default function EditCustomerPage({ params }: { params: any }) {
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, card_type: 'iban' })}
-                className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                   formData.card_type === 'iban'
                     ? 'bg-orange-500/10 border-orange-500 text-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.15)]'
                     : 'bg-neutral-950 border-neutral-800 text-neutral-500 hover:border-neutral-700'
@@ -252,12 +232,13 @@ export default function EditCustomerPage({ params }: { params: any }) {
             </div>
           </div>
 
-          {/* Temel Bilgiler */}
           <div>
             <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">Temel Bilgiler</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">Ad Soyad *</label>
+                <label className="block text-xs font-medium text-neutral-400 mb-1.5">
+                  {formData.card_type === 'iban' ? 'İşletme Adı / Başlık *' : 'Ad Soyad *'}
+                </label>
                 <input type="text" name="full_name" required className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.full_name} onChange={handleChange} />
               </div>
               <div>
@@ -265,7 +246,13 @@ export default function EditCustomerPage({ params }: { params: any }) {
                 <input type="text" name="slug" required className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors font-mono" value={formData.slug} onChange={handleChange} />
               </div>
               
-              {/* Sadece Premium İse Göster */}
+              {formData.card_type === 'iban' && (
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-neutral-400 mb-1.5">Hesap Sahibi Ad Soyad *</label>
+                  <input type="text" name="account_holder" required className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.account_holder} onChange={handleChange} />
+                </div>
+              )}
+
               {formData.card_type === 'premium' && (
                 <>
                   <div>
@@ -281,7 +268,6 @@ export default function EditCustomerPage({ params }: { params: any }) {
             </div>
           </div>
 
-          {/* İletişim ve Sosyal Medya (Sadece Premium için) */}
           {formData.card_type === 'premium' && (
             <>
               <div>
@@ -322,7 +308,6 @@ export default function EditCustomerPage({ params }: { params: any }) {
             </>
           )}
 
-          {/* Finansal & Konum Bilgileri */}
           <div>
             <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">
               {formData.card_type === 'iban' ? 'IBAN Bilgisi (Zorunlu)' : 'IBAN ve Adres'}
@@ -340,7 +325,6 @@ export default function EditCustomerPage({ params }: { params: any }) {
                 />
               </div>
               
-              {/* Sadece Premium ise adresi göster */}
               {formData.card_type === 'premium' && (
                 <div>
                   <label className="block text-xs font-medium text-neutral-400 mb-1.5">Adres</label>
@@ -350,56 +334,32 @@ export default function EditCustomerPage({ params }: { params: any }) {
             </div>
           </div>
 
-          <button type="submit" disabled={loading} className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-neutral-200 transition-colors text-sm shadow-xl flex items-center justify-center gap-2 disabled:opacity-50">
+          <button type="submit" disabled={loading} className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-neutral-200 transition-colors text-sm shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer">
             <Save size={18} />
             {loading ? 'Güncelleniyor...' : 'Değişiklikleri Kaydet'}
           </button>
         </form>
 
-        {/* KESME MODALI (Aynı) */}
         {showCropModal && imageSrc && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm">
-            {/* Modal içeriği NewCustomerPage ile tamamen aynıdır, temizlik açısından kırpılmıştır */}
-             <div className="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl">
+            <div className="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl">
               <div className="flex justify-between items-center mb-5">
                 <h3 className="text-lg font-bold text-white">Fotoğrafı Ayarla</h3>
-                <button type="button" onClick={() => setShowCropModal(false)} className="text-neutral-400 hover:text-white transition-colors">
+                <button type="button" onClick={() => setShowCropModal(false)} className="text-neutral-400 hover:text-white transition-colors cursor-pointer">
                   <X size={20} />
                 </button>
               </div>
               
               <div className="relative w-full h-72 bg-neutral-950 rounded-2xl overflow-hidden border border-neutral-800 mb-6">
-                <Cropper
-                  image={imageSrc}
-                  crop={crop}
-                  zoom={zoom}
-                  aspect={1}
-                  cropShape="round"
-                  showGrid={false}
-                  onCropChange={setCrop}
-                  onCropComplete={onCropComplete}
-                  onZoomChange={setZoom}
-                />
+                <Cropper image={imageSrc} crop={crop} zoom={zoom} aspect={1} cropShape="round" showGrid={false} onCropChange={setCrop} onCropComplete={onCropComplete} onZoomChange={setZoom} />
               </div>
 
               <div className="mb-6">
                 <label className="block text-xs font-medium text-neutral-400 mb-3 text-center">Yakınlaştır (Zoom)</label>
-                <input
-                  type="range"
-                  value={zoom}
-                  min={1}
-                  max={3}
-                  step={0.1}
-                  onChange={(e) => setZoom(Number(e.target.value))}
-                  className="w-full accent-white h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer"
-                />
+                <input type="range" value={zoom} min={1} max={3} step={0.1} onChange={(e) => setZoom(Number(e.target.value))} className="w-full accent-white h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer" />
               </div>
 
-              <button
-                type="button"
-                onClick={handleCropImage}
-                className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-neutral-200 transition-colors text-sm shadow-lg flex items-center justify-center gap-2"
-              >
+              <button type="button" onClick={handleCropImage} className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-neutral-200 transition-colors text-sm shadow-lg flex items-center justify-center gap-2 cursor-pointer">
                 <Check size={18} />
                 Kırp ve Uygula
               </button>
