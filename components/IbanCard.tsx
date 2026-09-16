@@ -70,14 +70,79 @@ export default function IbanCard({ customer }: { customer: any }) {
       {/* Tüm halkalar aynı merkeze (items-center justify-center) oturtuldu */}
       <div className="relative h-[35vh] w-full flex flex-col items-center justify-center z-10">
         
-        {/* Glow Halkalar (Hepsi aynı merkezden dışa doğru büyüyor) */}
-        <div className="absolute w-[1200px] h-[1200px] rounded-full border border-[#F59E0B]/10 pointer-events-none"></div>
-        <div className="absolute w-[800px] h-[800px] rounded-full border-[1.5px] border-[#F59E0B]/15 pointer-events-none"></div>
-        <div className="absolute w-[500px] h-[500px] rounded-full border-[2px] border-[#F59E0B]/20 pointer-events-none"></div>
-        <div className="absolute w-[280px] h-[280px] rounded-full border-[3px] border-[#F59E0B]/40 shadow-[0_0_60px_rgba(245,158,11,0.2)] pointer-events-none"></div>
-        
-        {/* Merkez Işık Patlaması */}
-        <div className="absolute w-[150px] h-[150px] bg-[#F59E0B] blur-[90px] opacity-30 pointer-events-none"></div>
+        {/* Orange Wave Ripples (referans görseldeki gibi) */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[1100px] h-[1100px] pointer-events-none">
+          <svg viewBox="0 0 1000 1000" className="w-full h-full" fill="none">
+            <defs>
+              <radialGradient id="waveMask" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="white" stopOpacity="1" />
+                <stop offset="55%" stopColor="white" stopOpacity="1" />
+                <stop offset="78%" stopColor="white" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="white" stopOpacity="0" />
+              </radialGradient>
+              <filter id="waveBlur" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="5" />
+              </filter>
+              <filter id="waveBlurSm" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="1.6" />
+              </filter>
+              <linearGradient id="arcHot" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FDBA74" />
+                <stop offset="35%" stopColor="#F59E0B" />
+                <stop offset="65%" stopColor="#92400E" />
+                <stop offset="100%" stopColor="#FDBA74" />
+              </linearGradient>
+            </defs>
+
+            <mask id="waveFadeMask">
+              <rect x="0" y="0" width="1000" height="1000" fill="url(#waveMask)" />
+            </mask>
+
+            <g mask="url(#waveFadeMask)" transform="translate(500 500)">
+              {/* Baz dalgalar - içten dışa kalınlaşan, çift çizgili ripple hissi */}
+              <circle r="132" stroke="#431407" strokeWidth="3" opacity="0.95" />
+              <circle r="141" stroke="#F59E0B" strokeWidth="1.4" opacity="0.5" filter="url(#waveBlurSm)" />
+
+              <circle r="172" stroke="#7C2D12" strokeWidth="4" opacity="0.9" />
+              <circle r="183" stroke="#F59E0B" strokeWidth="1.6" opacity="0.55" filter="url(#waveBlurSm)" />
+
+              <circle r="216" stroke="#9A3412" strokeWidth="5" opacity="0.9" />
+              <circle r="229" stroke="#FB923C" strokeWidth="1.8" opacity="0.6" filter="url(#waveBlurSm)" />
+
+              <circle r="264" stroke="#9A3412" strokeWidth="6" opacity="0.95" />
+              <circle r="279" stroke="#F59E0B" strokeWidth="2" opacity="0.65" filter="url(#waveBlurSm)" />
+
+              <circle r="316" stroke="#B45309" strokeWidth="7" opacity="0.95" />
+              <circle r="333" stroke="#FDBA74" strokeWidth="2.2" opacity="0.7" filter="url(#waveBlurSm)" />
+
+              <circle r="372" stroke="#D97706" strokeWidth="8" opacity="0.9" />
+              <circle r="391" stroke="#FDBA74" strokeWidth="2.4" opacity="0.7" filter="url(#waveBlurSm)" />
+
+              <circle r="432" stroke="#F59E0B" strokeWidth="9" opacity="0.75" filter="url(#waveBlur)" />
+              <circle r="453" stroke="#FDBA74" strokeWidth="2.5" opacity="0.6" />
+
+              {/* Yanlardaki parlak ışık şeritleri (soldaki ve sağdaki dikey parlamalar) */}
+              <g stroke="url(#arcHot)" strokeLinecap="round" filter="url(#waveBlurSm)">
+                {/* Sol parlak yay */}
+                <circle r="316" strokeWidth="7" opacity="0.95" strokeDasharray="120 1862" transform="rotate(155)" />
+                <circle r="372" strokeWidth="9" opacity="0.95" strokeDasharray="150 2186" transform="rotate(150)" />
+                <circle r="432" strokeWidth="10" opacity="0.9" strokeDasharray="170 2544" transform="rotate(148)" />
+                {/* Sağ parlak yay */}
+                <circle r="316" strokeWidth="7" opacity="0.95" strokeDasharray="120 1862" transform="rotate(-35)" />
+                <circle r="372" strokeWidth="9" opacity="0.95" strokeDasharray="150 2186" transform="rotate(-30)" />
+                <circle r="432" strokeWidth="10" opacity="0.9" strokeDasharray="170 2544" transform="rotate(-28)" />
+                {/* Üst ince yansımalar */}
+                <circle r="264" strokeWidth="4" opacity="0.8" strokeDasharray="90 1570" transform="rotate(100)" />
+                <circle r="264" strokeWidth="4" opacity="0.8" strokeDasharray="90 1570" transform="rotate(-80)" />
+              </g>
+            </g>
+          </svg>
+        </div>
+
+        {/* Alt sıcak zemin ışıması */}
+        <div className="absolute left-1/2 bottom-[-80px] -translate-x-1/2 w-[500px] h-[260px] bg-[#F59E0B]/25 blur-[100px] rounded-full pointer-events-none"></div>
+        {/* Merkez karartma (logonun okunması için) */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] bg-[#050505]/85 blur-[50px] rounded-full pointer-events-none"></div>
 
         {/* TapTap Siyah Kart Logosu (Tam halkaların merkezinde) */}
         <div className="relative z-20 flex flex-col items-center mt-[-40px]">
