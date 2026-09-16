@@ -51,6 +51,7 @@ export async function PUT(
       full_name,
       slug,
       card_type,
+      account_holder,
       job_title,
       company,
       phone,
@@ -73,12 +74,13 @@ export async function PUT(
 
     await db.execute({
       sql: `UPDATE customers 
-            SET full_name = ?, slug = ?, card_type = ?, job_title = ?, company = ?, phone = ?, email = ?, iban = ?, address = ?, profile_image = ?
+            SET full_name = ?, slug = ?, card_type = ?, account_holder = ?, job_title = ?, company = ?, phone = ?, email = ?, iban = ?, address = ?, profile_image = ?
             WHERE id = ?`,
       args: [
         full_name,
         slug.trim().toLowerCase(),
-        card_type || 'premium', // Kart tipini ekledik
+        card_type || 'premium',
+        account_holder || '',
         job_title || '',
         company || '',
         phone || '',
@@ -135,20 +137,20 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { id: customerId } = await params;
 
-    if (!id) {
+    if (!customerId) {
       return NextResponse.json({ success: false, error: 'Geçersiz ID' }, { status: 400 });
     }
 
     await db.execute({
       sql: 'DELETE FROM social_links WHERE customer_id = ?',
-      args: [id],
+      args: [customerId],
     });
 
     await db.execute({
       sql: 'DELETE FROM customers WHERE id = ?',
-      args: [id],
+      args: [customerId],
     });
 
     return NextResponse.json({ success: true });
