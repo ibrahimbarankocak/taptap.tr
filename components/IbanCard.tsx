@@ -36,14 +36,14 @@ export default function IbanCard({ customer }: { customer: any }) {
         </h1>
 
         {/* IBAN Kutusu (Referans görseldeki gibi koyu gri ve şık) */}
-        <div className="w-full max-w-[360px] bg-[#0f0f0f] border border-[#1f1f1f] rounded-[24px] p-5 flex items-center justify-between shadow-2xl">
+        <div className="w-full max-w-[360px] bg-[#0f0f0f] border border-[#1f1f1f] rounded-[24px] p-5 flex items-start justify-between gap-3 shadow-2xl">
           
-          <div className="flex flex-col overflow-hidden pr-2">
+          <div className="flex flex-col min-w-0 flex-1">
             <span className="text-[10px] text-neutral-500 font-bold tracking-[0.15em] mb-2 uppercase">
               Banka Hesabı
             </span>
-            {/* whitespace-nowrap ile 2 satıra inmesi kesinlikle engellendi */}
-            <span className="font-mono text-[13px] sm:text-sm text-white tracking-widest whitespace-nowrap overflow-hidden text-ellipsis">
+            {/* Tam IBAN her zaman görünsün diye wrap ediliyor */}
+            <span className="font-mono text-[12px] sm:text-[13px] text-white tracking-wider break-all leading-6 whitespace-normal">
               {customer.iban}
             </span>
           </div>
@@ -70,29 +70,39 @@ export default function IbanCard({ customer }: { customer: any }) {
       {/* Tüm halkalar aynı merkeze (items-center justify-center) oturtuldu */}
       <div className="relative h-[35vh] w-full flex flex-col items-center justify-center z-10">
         
-        {/* Sharp symmetric orange waves */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[620px] h-[620px] pointer-events-none">
-          <svg viewBox="0 0 620 620" className="w-full h-full block" fill="none">
-            <g transform="translate(310 310)" strokeLinecap="round">
-              <circle r="104" stroke="#78350F" strokeWidth="2" opacity="0.85" />
-              <circle r="132" stroke="#92400E" strokeWidth="2.5" opacity="0.9" />
+        {/* Glowing symmetric orange waves (referans görseldeki gibi) */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[680px] h-[680px] pointer-events-none">
+          <svg viewBox="0 0 680 680" className="w-full h-full block" fill="none">
+            <defs>
+              <filter id="ibanHalo" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="7" />
+              </filter>
+            </defs>
+            <g transform="translate(340 340)" strokeLinecap="round">
+              {/* Halo katmanı: yumuşak turuncu ışıma (simetrik) */}
+              <g filter="url(#ibanHalo)" opacity="0.5">
+                <circle r="104" stroke="#78350F" strokeWidth="8" />
+                <circle r="132" stroke="#92400E" strokeWidth="9" />
+                <circle r="162" stroke="#B45309" strokeWidth="10" />
+                <circle r="194" stroke="#C2410C" strokeWidth="11" />
+                <circle r="228" stroke="#EA580C" strokeWidth="12" />
+                <circle r="264" stroke="#F59E0B" strokeWidth="13" />
+                <circle r="300" stroke="#FBBF24" strokeWidth="14" />
+              </g>
+              {/* Core katmanı: keskin parlak dalgalar (simetrik, tam daire) */}
+              <circle r="104" stroke="#78350F" strokeWidth="2" opacity="0.9" />
+              <circle r="132" stroke="#92400E" strokeWidth="2.5" opacity="0.95" />
               <circle r="162" stroke="#B45309" strokeWidth="3" opacity="0.95" />
               <circle r="194" stroke="#D97706" strokeWidth="3.5" opacity="0.95" />
               <circle r="228" stroke="#F59E0B" strokeWidth="4" opacity="0.95" />
-              <circle r="264" stroke="#F59E0B" strokeWidth="4.5" opacity="0.9" />
-              <circle r="300" stroke="#FBBF24" strokeWidth="5" opacity="0.85" />
+              <circle r="264" stroke="#F59E0B" strokeWidth="4.5" opacity="0.95" />
+              <circle r="300" stroke="#FCD34D" strokeWidth="5" opacity="0.95" />
             </g>
           </svg>
         </div>
 
-        {/* Symmetric side light streaks */}
-        <div className="absolute top-1/2 -translate-y-1/2 left-[calc(50%-215px)] w-[5px] h-[340px] rounded-full bg-gradient-to-b from-transparent via-[#FDBA74] to-transparent opacity-90 rotate-[16deg] pointer-events-none"></div>
-        <div className="absolute top-1/2 -translate-y-1/2 right-[calc(50%-215px)] w-[5px] h-[340px] rounded-full bg-gradient-to-b from-transparent via-[#FDBA74] to-transparent opacity-90 rotate-[-16deg] pointer-events-none"></div>
-        <div className="absolute top-1/2 -translate-y-1/2 left-[calc(50%-175px)] w-[3px] h-[260px] rounded-full bg-gradient-to-b from-transparent via-[#F59E0B] to-transparent opacity-70 rotate-[16deg] pointer-events-none"></div>
-        <div className="absolute top-1/2 -translate-y-1/2 right-[calc(50%-175px)] w-[3px] h-[260px] rounded-full bg-gradient-to-b from-transparent via-[#F59E0B] to-transparent opacity-70 rotate-[-16deg] pointer-events-none"></div>
-
-        {/* Symmetric warm floor glow */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-[-40px] w-[420px] h-[120px] bg-[#F59E0B]/20 blur-[60px] rounded-full pointer-events-none"></div>
+        {/* Symmetric warm floor glow (referanstaki alt turuncu zemin) */}
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-[-50px] w-[480px] h-[170px] bg-[#D97706]/25 blur-[70px] rounded-full pointer-events-none"></div>
 
         {/* TapTap Siyah Kart Logosu (Tam halkaların merkezinde) */}
         <div className="relative z-20 flex flex-col items-center mt-[-40px]">
