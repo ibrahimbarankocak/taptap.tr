@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Check, Copy, ShoppingBag, User } from 'lucide-react';
+import { Check, Copy, ShoppingBag } from 'lucide-react';
 import { FaInstagram } from 'react-icons/fa';
 
 export default function IbanCard({ customer }: { customer: any }) {
@@ -47,69 +47,69 @@ export default function IbanCard({ customer }: { customer: any }) {
     <div className="relative min-h-screen bg-[#050505] text-white font-sans flex flex-col overflow-hidden selection:bg-orange-500/30">
 
       {/* --- 1. EN ÜST: TAPTAP SİYAH KART LOGOSU --- */}
-      <div className="w-full flex justify-center pt-10 z-20">
-        <div className="bg-[#050505] border border-[#1a1a1a] rounded-xl py-3.5 px-7 flex flex-col items-center shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
-          <span className="text-2xl font-black text-white tracking-tighter mb-1">TapTap.</span>
+      <div className="w-full flex justify-center pt-8 z-20">
+        <div className="bg-[#050505] border border-[#1a1a1a] rounded-xl py-3 px-6 flex flex-col items-center shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
+          <span className="text-xl font-black text-white tracking-tighter mb-0.5">TapTap.</span>
           <span className="text-[5px] text-neutral-500 tracking-[0.3em] font-bold">PREMIUM</span>
           <span className="text-[5px] text-neutral-500 tracking-[0.3em] font-bold">NFC ÇÖZÜMLERİ</span>
         </div>
       </div>
 
       {/* --- 2. ORTA KISIM: İŞLETME ADI VE BİLGİ KUTULARI --- */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full px-4 z-20 pb-4 gap-4">
+      <div className="flex-1 flex flex-col items-center justify-center w-full px-4 z-20 py-4 gap-3">
         
         {/* İşletme Adı / Başlık */}
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-1">
           {customer.full_name}
         </h1>
 
         {/* IBAN KUTUSU */}
-        <div className="w-full max-w-[360px] bg-[#0f0f0f] border border-[#1f1f1f] rounded-[24px] p-4 sm:p-5 flex items-center justify-between gap-2 sm:gap-3 shadow-2xl">
+        <div className="w-full max-w-[360px] bg-[#0f0f0f] border border-[#1f1f1f] rounded-[22px] p-4 flex items-center justify-between gap-2 shadow-2xl">
           <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
-            <span className="text-[9px] sm:text-[10px] text-neutral-500 font-bold tracking-[0.15em] mb-1.5 uppercase">
+            <span className="text-[9px] text-neutral-500 font-bold tracking-[0.15em] mb-1 uppercase">
               Banka Hesabı (IBAN)
             </span>
-            <span className="font-mono text-[10px] sm:text-[12px] text-white tracking-tighter sm:tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
+            <span className="font-mono text-[10px] sm:text-[12px] text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
               {customer.iban}
             </span>
           </div>
 
           <button
             onClick={handleCopyIban}
-            className={`flex flex-col items-center justify-center gap-1 sm:gap-1.5 w-[64px] sm:w-[72px] h-[56px] sm:h-[64px] rounded-2xl border transition-all duration-300 shrink-0 cursor-pointer ${
+            className={`flex flex-col items-center justify-center gap-1 w-[64px] h-[54px] rounded-xl border transition-all duration-300 shrink-0 cursor-pointer ${
               copiedIban 
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' 
                 : 'bg-[#F59E0B]/5 border-[#F59E0B]/20 hover:bg-[#F59E0B]/10 hover:border-[#F59E0B]/40 text-[#F59E0B]'
             }`}
           >
-            {copiedIban ? <Check size={18} strokeWidth={2.5} /> : <Copy size={18} strokeWidth={2.5} />}
-            <span className="text-[8px] sm:text-[9px] font-bold tracking-wider">
+            {copiedIban ? <Check size={16} strokeWidth={2.5} /> : <Copy size={16} strokeWidth={2.5} />}
+            <span className="text-[8px] font-bold tracking-wider">
               {copiedIban ? 'ALINDI' : 'KOPYALA'}
             </span>
           </button>
         </div>
 
         {/* HESAP SAHİBİ KUTUSU */}
-        <div className="w-full max-w-[360px] bg-[#0f0f0f] border border-[#1f1f1f] rounded-[24px] p-4 sm:p-5 flex items-center justify-between gap-2 sm:gap-3 shadow-2xl">
+        <div className="w-full max-w-[360px] bg-[#0f0f0f] border border-[#1f1f1f] rounded-[22px] p-4 flex items-center justify-between gap-2 shadow-2xl">
           <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
-            <span className="text-[9px] sm:text-[10px] text-neutral-500 font-bold tracking-[0.15em] mb-1.5 uppercase">
+            <span className="text-[9px] text-neutral-500 font-bold tracking-[0.15em] mb-1 uppercase">
               Hesap Sahibi Ad Soyad
             </span>
-            <span className="text-sm sm:text-base font-semibold text-white tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">
+            <span className="text-xs sm:text-sm font-semibold text-white tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">
               {customer.account_holder || customer.full_name}
             </span>
           </div>
 
           <button
             onClick={handleCopyHolder}
-            className={`flex flex-col items-center justify-center gap-1 sm:gap-1.5 w-[64px] sm:w-[72px] h-[56px] sm:h-[64px] rounded-2xl border transition-all duration-300 shrink-0 cursor-pointer ${
+            className={`flex flex-col items-center justify-center gap-1 w-[64px] h-[54px] rounded-xl border transition-all duration-300 shrink-0 cursor-pointer ${
               copiedHolder 
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' 
                 : 'bg-[#F59E0B]/5 border-[#F59E0B]/20 hover:bg-[#F59E0B]/10 hover:border-[#F59E0B]/40 text-[#F59E0B]'
             }`}
           >
-            {copiedHolder ? <Check size={18} strokeWidth={2.5} /> : <Copy size={18} strokeWidth={2.5} />}
-            <span className="text-[8px] sm:text-[9px] font-bold tracking-wider">
+            {copiedHolder ? <Check size={16} strokeWidth={2.5} /> : <Copy size={16} strokeWidth={2.5} />}
+            <span className="text-[8px] font-bold tracking-wider">
               {copiedHolder ? 'ALINDI' : 'KOPYALA'}
             </span>
           </button>
@@ -117,8 +117,8 @@ export default function IbanCard({ customer }: { customer: any }) {
 
       </div>
 
-      {/* --- 3. ALT KISIM: SOLUK HALKALAR VE BUTONLAR --- */}
-      <div className="relative h-[25vh] w-full flex flex-col items-center justify-center z-10">
+      {/* --- 3. ALT KISIM: SOLUK HALKALAR VE BUTONLAR (BİR TIK YUKARI ALINDI) --- */}
+      <div className="relative h-[22vh] w-full flex flex-col items-center justify-start z-10">
         
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] pointer-events-none">
           <svg viewBox="0 0 800 800" className="w-full h-full block" fill="none">
@@ -142,16 +142,17 @@ export default function IbanCard({ customer }: { customer: any }) {
           </svg>
         </div>
 
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-[-50px] w-[480px] h-[170px] bg-[#D97706]/10 blur-[70px] rounded-full pointer-events-none"></div>
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-[-20px] w-[480px] h-[140px] bg-[#D97706]/10 blur-[70px] rounded-full pointer-events-none"></div>
 
-        <div className="relative z-20 flex items-center justify-center gap-3 sm:gap-4 mt-6">
+        {/* Butonlar yukarı taşındı */}
+        <div className="relative z-20 flex items-center justify-center gap-3 mt-2">
           <a 
             href="https://www.instagram.com/taptap.tr/" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="flex items-center gap-2.5 bg-[#0f0f0f]/80 backdrop-blur-md hover:bg-[#1a1a1a] border border-[#1f1f1f] hover:border-neutral-700 text-neutral-400 hover:text-white px-5 py-3.5 rounded-2xl transition-all duration-300 shadow-lg active:scale-95"
+            className="flex items-center gap-2 bg-[#0f0f0f]/90 backdrop-blur-md hover:bg-[#1a1a1a] border border-[#1f1f1f] hover:border-neutral-700 text-neutral-400 hover:text-white px-4 py-3 rounded-2xl transition-all duration-300 shadow-lg active:scale-95"
           >
-            <FaInstagram size={18} />
+            <FaInstagram size={16} />
             <span className="text-[10px] font-bold tracking-widest uppercase mt-0.5">Instagram</span>
           </a>
 
@@ -159,9 +160,9 @@ export default function IbanCard({ customer }: { customer: any }) {
             href="https://www.shopier.com/TapTapTr" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="flex items-center gap-2.5 bg-[#0f0f0f]/80 backdrop-blur-md hover:bg-[#1a1a1a] border border-[#1f1f1f] hover:border-neutral-700 text-neutral-400 hover:text-white px-5 py-3.5 rounded-2xl transition-all duration-300 shadow-lg active:scale-95"
+            className="flex items-center gap-2 bg-[#0f0f0f]/90 backdrop-blur-md hover:bg-[#1a1a1a] border border-[#1f1f1f] hover:border-neutral-700 text-neutral-400 hover:text-white px-4 py-3 rounded-2xl transition-all duration-300 shadow-lg active:scale-95"
           >
-            <ShoppingBag size={18} />
+            <ShoppingBag size={16} />
             <span className="text-[10px] font-bold tracking-widest uppercase mt-0.5">Sipariş Ver</span>
           </a>
         </div>

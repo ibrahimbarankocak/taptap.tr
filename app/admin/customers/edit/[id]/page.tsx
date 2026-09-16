@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, ImagePlus, Camera, X, Check, CreditCard, Wallet, Edit3 } from 'lucide-react';
 import Link from 'next/link';
@@ -27,8 +27,9 @@ async function getCroppedImg(
   return canvas.toDataURL('image/jpeg', 0.9);
 }
 
-export default function EditCustomerPage({ params }: { params: any }) {
-  const id = params?.id;
+export default function EditCustomerPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+  const id = resolvedParams?.id;
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -88,7 +89,10 @@ export default function EditCustomerPage({ params }: { params: any }) {
           router.push('/admin/customers');
         }
       })
-      .catch(() => alert('Veri çekme hatası!'))
+      .catch((err) => {
+        console.error('Fetch error:', err);
+        alert('Veri çekme hatası!');
+      })
       .finally(() => setDataLoading(false));
   }, [id, router]);
 
@@ -153,7 +157,7 @@ export default function EditCustomerPage({ params }: { params: any }) {
   if (dataLoading) {
     return (
       <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
-        <p className="text-neutral-500">Müşteri verileri yükleniyor...</p>
+        <p className="text-neutral-500 animate-pulse">Müşteri verileri yükleniyor...</p>
       </div>
     );
   }
