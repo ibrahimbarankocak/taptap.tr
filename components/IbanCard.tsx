@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Check, Copy } from 'lucide-react';
+import { Check, Copy, ShoppingBag } from 'lucide-react';
+import { FaInstagram } from 'react-icons/fa';
 
 export default function IbanCard({ customer }: { customer: any }) {
   const [copied, setCopied] = useState(false);
@@ -27,28 +28,34 @@ export default function IbanCard({ customer }: { customer: any }) {
   return (
     <div className="relative min-h-screen bg-[#050505] text-white font-sans flex flex-col overflow-hidden selection:bg-orange-500/30">
 
-      {/* --- 1. ÜST/ORTA KISIM: İSİM VE IBAN KUTUSU --- */}
-      {/* flex-1 vererek içeriği dikeyde ortalıyoruz, biraz daha aşağı inmiş oluyor */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full px-4 z-20 pb-10">
+      {/* --- 1. EN ÜST: TAPTAP SİYAH KART LOGOSU --- */}
+      <div className="w-full flex justify-center pt-10 z-20">
+        <div className="bg-[#050505] border border-[#1a1a1a] rounded-xl py-3.5 px-7 flex flex-col items-center shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
+          <span className="text-2xl font-black text-white tracking-tighter mb-1">TapTap.</span>
+          <span className="text-[5px] text-neutral-500 tracking-[0.3em] font-bold">PREMIUM</span>
+          <span className="text-[5px] text-neutral-500 tracking-[0.3em] font-bold">NFC ÇÖZÜMLERİ</span>
+        </div>
+      </div>
+
+      {/* --- 2. ORTA KISIM: İSİM VE IBAN KUTUSU --- */}
+      {/* flex-1 ile dikeyde tam ortalıyoruz */}
+      <div className="flex-1 flex flex-col items-center justify-center w-full px-4 z-20 pb-4">
         
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-8">
           {customer.full_name}
         </h1>
 
-        {/* IBAN Kutusu (Referans görseldeki gibi koyu gri ve şık) */}
         <div className="w-full max-w-[360px] bg-[#0f0f0f] border border-[#1f1f1f] rounded-[24px] p-5 flex items-start justify-between gap-3 shadow-2xl">
           
           <div className="flex flex-col min-w-0 flex-1">
             <span className="text-[10px] text-neutral-500 font-bold tracking-[0.15em] mb-2 uppercase">
               Banka Hesabı
             </span>
-            {/* Tam IBAN her zaman görünsün diye wrap ediliyor */}
             <span className="font-mono text-[12px] sm:text-[13px] text-white tracking-wider break-all leading-6 whitespace-normal">
               {customer.iban}
             </span>
           </div>
 
-          {/* Kopyala Butonu (Referanstaki gibi altın/turuncu çizgili) */}
           <button
             onClick={handleCopy}
             className={`flex flex-col items-center justify-center gap-1.5 w-[72px] h-[64px] rounded-2xl border transition-all duration-300 shrink-0 ${
@@ -66,11 +73,10 @@ export default function IbanCard({ customer }: { customer: any }) {
         </div>
       </div>
 
-      {/* --- 2. ALT KISIM: KUSURSUZ MERKEZLİ HALKALAR VE LOGO --- */}
-      {/* Tüm halkalar aynı merkeze (items-center justify-center) oturtuldu */}
-      <div className="relative h-[35vh] w-full flex flex-col items-center justify-center z-10">
+      {/* --- 3. ALT KISIM: KUSURSUZ MERKEZLİ HALKALAR VE BUTONLAR --- */}
+      <div className="relative h-[30vh] w-full flex flex-col items-center justify-center z-10">
         
-        {/* Glowing symmetric orange waves (referans görseldeki gibi) */}
+        {/* Glow Halkalar */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[680px] h-[680px] pointer-events-none">
           <svg viewBox="0 0 680 680" className="w-full h-full block" fill="none">
             <defs>
@@ -79,7 +85,7 @@ export default function IbanCard({ customer }: { customer: any }) {
               </filter>
             </defs>
             <g transform="translate(340 340)" strokeLinecap="round">
-              {/* Halo katmanı: yumuşak turuncu ışıma (simetrik) */}
+              {/* Halo katmanı: yumuşak turuncu ışıma */}
               <g filter="url(#ibanHalo)" opacity="0.5">
                 <circle r="104" stroke="#78350F" strokeWidth="8" />
                 <circle r="132" stroke="#92400E" strokeWidth="9" />
@@ -89,7 +95,7 @@ export default function IbanCard({ customer }: { customer: any }) {
                 <circle r="264" stroke="#F59E0B" strokeWidth="13" />
                 <circle r="300" stroke="#FBBF24" strokeWidth="14" />
               </g>
-              {/* Core katmanı: keskin parlak dalgalar (simetrik, tam daire) */}
+              {/* Core katmanı: keskin parlak dalgalar */}
               <circle r="104" stroke="#78350F" strokeWidth="2" opacity="0.9" />
               <circle r="132" stroke="#92400E" strokeWidth="2.5" opacity="0.95" />
               <circle r="162" stroke="#B45309" strokeWidth="3" opacity="0.95" />
@@ -101,24 +107,35 @@ export default function IbanCard({ customer }: { customer: any }) {
           </svg>
         </div>
 
-        {/* Symmetric warm floor glow (referanstaki alt turuncu zemin) */}
+        {/* Zemin Işık Patlaması */}
         <div className="absolute left-1/2 -translate-x-1/2 bottom-[-50px] w-[480px] h-[170px] bg-[#D97706]/25 blur-[70px] rounded-full pointer-events-none"></div>
 
-        {/* TapTap Siyah Kart Logosu (Tam halkaların merkezinde) */}
-        <div className="relative z-20 flex flex-col items-center mt-[-40px]">
-          <div className="bg-[#050505] border border-[#1a1a1a] rounded-xl py-3.5 px-7 flex flex-col items-center shadow-[0_10px_40px_rgba(0,0,0,0.8)] mb-4">
-            <span className="text-2xl font-black text-white tracking-tighter mb-1">TapTap.</span>
-            <span className="text-[5px] text-neutral-500 tracking-[0.3em] font-bold">PREMIUM</span>
-            <span className="text-[5px] text-neutral-500 tracking-[0.3em] font-bold">NFC ÇÖZÜMLERİ</span>
-          </div>
-          
-          <span className="text-[9px] font-bold text-neutral-500 tracking-[0.2em] uppercase mb-1">Powered By</span>
-          <span className="text-sm font-bold text-neutral-300 tracking-wide">TapTap</span>
+        {/* Sosyal Medya ve Sipariş Butonları (Halkaların tam ortasında) */}
+        <div className="relative z-20 flex items-center justify-center gap-3 sm:gap-4 mt-8">
+          <a 
+            href="https://www.instagram.com/taptap.tr/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2.5 bg-[#0f0f0f]/80 backdrop-blur-md hover:bg-[#1a1a1a] border border-[#1f1f1f] hover:border-neutral-700 text-neutral-400 hover:text-white px-5 py-3.5 rounded-2xl transition-all duration-300 shadow-lg active:scale-95"
+          >
+            <FaInstagram size={18} />
+            <span className="text-[10px] font-bold tracking-widest uppercase mt-0.5">Instagram</span>
+          </a>
+
+          <a 
+            href="https://www.shopier.com/TapTapTr" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2.5 bg-[#0f0f0f]/80 backdrop-blur-md hover:bg-[#1a1a1a] border border-[#1f1f1f] hover:border-neutral-700 text-neutral-400 hover:text-white px-5 py-3.5 rounded-2xl transition-all duration-300 shadow-lg active:scale-95"
+          >
+            <ShoppingBag size={18} />
+            <span className="text-[10px] font-bold tracking-widest uppercase mt-0.5">Sipariş Ver</span>
+          </a>
         </div>
 
       </div>
 
-      {/* --- 3. OTOMATİK KOPYALAMA BİLDİRİMİ (Toast) --- */}
+      {/* --- 4. OTOMATİK KOPYALAMA BİLDİRİMİ (Toast) --- */}
       <div 
         className={`fixed top-10 left-1/2 -translate-x-1/2 bg-[#111] border border-[#222] text-white px-5 py-3 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 flex items-center gap-3 transition-all duration-500 ease-out ${
           showToast ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-10 scale-95 pointer-events-none'
