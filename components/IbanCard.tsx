@@ -6,12 +6,11 @@ export default function IbanCard({ customer }: { customer: any }) {
   const [copied, setCopied] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
-  // Sayfa açılır açılmaz IBAN'ı otomatik kopyalama ve alttan bildirim (toast) çıkarma
+  // Sayfa açılır açılmaz IBAN'ı otomatik kopyalama ve toast bildirim
   useEffect(() => {
     if (customer.iban) {
       navigator.clipboard.writeText(customer.iban).then(() => {
         setShowToast(true);
-        // 3 saniye sonra uyarıyı gizle
         setTimeout(() => setShowToast(false), 3000);
       }).catch(() => {});
     }
@@ -26,76 +25,84 @@ export default function IbanCard({ customer }: { customer: any }) {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#050505] text-white font-sans flex flex-col items-center overflow-hidden selection:bg-orange-500/30">
+    <div className="relative min-h-screen bg-[#050505] text-white font-sans flex flex-col overflow-hidden selection:bg-orange-500/30">
 
-      {/* --- 1. SADECE ALT KISIMDAKİ TURUNCU GLOW HALKALAR (Görselle Birebir) --- */}
-      <div className="absolute bottom-0 w-full h-[60vh] flex justify-center items-end pointer-events-none z-0 overflow-hidden">
-        {/* Ring 1 (En dış) */}
-        <div className="absolute bottom-[-300px] w-[900px] h-[900px] rounded-full border border-[#F59E0B]/10 shadow-[0_0_80px_rgba(245,158,11,0.05)]"></div>
-        {/* Ring 2 */}
-        <div className="absolute bottom-[-220px] w-[700px] h-[700px] rounded-full border-[2px] border-[#F59E0B]/20 shadow-[0_0_80px_rgba(245,158,11,0.1)]"></div>
-        {/* Ring 3 */}
-        <div className="absolute bottom-[-140px] w-[500px] h-[500px] rounded-full border-[3px] border-[#F59E0B]/40 shadow-[0_0_80px_rgba(245,158,11,0.2)]"></div>
-        {/* Ring 4 */}
-        <div className="absolute bottom-[-60px] w-[300px] h-[300px] rounded-full border-[4px] border-[#F59E0B]/70 shadow-[0_0_80px_rgba(245,158,11,0.4),inset_0_0_40px_rgba(245,158,11,0.2)]"></div>
-        {/* Ring 5 (En iç, parlak) */}
-        <div className="absolute bottom-[-10px] w-[150px] h-[150px] rounded-full bg-[#F59E0B]/10 border-[5px] border-[#F59E0B] shadow-[0_0_60px_rgba(245,158,11,0.6),inset_0_0_60px_rgba(245,158,11,0.4)]"></div>
-        {/* Merkez Işık Patlaması */}
-        <div className="absolute bottom-[-50px] w-[300px] h-[150px] bg-[#F59E0B] blur-[100px] opacity-40"></div>
-      </div>
-
-      {/* --- 2. İÇERİK (Profil Resmi Yok, Sade ve Premium IBAN Modülü) --- */}
-      <div className="relative z-10 w-full max-w-sm flex flex-col items-center px-6 mt-16 sm:mt-24">
+      {/* --- 1. ÜST/ORTA KISIM: İSİM VE IBAN KUTUSU --- */}
+      {/* flex-1 vererek içeriği dikeyde ortalıyoruz, biraz daha aşağı inmiş oluyor */}
+      <div className="flex-1 flex flex-col items-center justify-center w-full px-4 z-20 pb-10">
         
-        {/* Kimlik Bilgileri */}
-        <h1 className="text-3xl font-extrabold text-center mb-1 text-white tracking-tight">{customer.full_name}</h1>
-        {customer.job_title && <p className="text-[#F59E0B] text-center font-medium mb-1">{customer.job_title}</p>}
-        {customer.company && <p className="text-neutral-400 text-sm text-center mb-10">{customer.company}</p>}
-        {!customer.company && <div className="mb-10"></div>}
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-8">
+          {customer.full_name}
+        </h1>
 
-        {/* Yeni Sade IBAN Kutusu (Yazı solda, ufak buton sağda) */}
-        <div className="w-full flex items-center justify-between bg-neutral-900/60 backdrop-blur-md border border-neutral-800/80 p-5 rounded-3xl shadow-2xl">
-          <div className="flex flex-col pr-4">
-            <span className="text-[10px] text-neutral-500 uppercase tracking-[0.2em] font-bold mb-1.5">Banka Hesabı</span>
-            <span className="font-mono text-[15px] sm:text-base text-white tracking-widest break-all">
+        {/* IBAN Kutusu (Referans görseldeki gibi koyu gri ve şık) */}
+        <div className="w-full max-w-[360px] bg-[#0f0f0f] border border-[#1f1f1f] rounded-[24px] p-5 flex items-center justify-between shadow-2xl">
+          
+          <div className="flex flex-col overflow-hidden pr-2">
+            <span className="text-[10px] text-neutral-500 font-bold tracking-[0.15em] mb-2 uppercase">
+              Banka Hesabı
+            </span>
+            {/* whitespace-nowrap ile 2 satıra inmesi kesinlikle engellendi */}
+            <span className="font-mono text-[13px] sm:text-sm text-white tracking-widest whitespace-nowrap overflow-hidden text-ellipsis">
               {customer.iban}
             </span>
           </div>
 
+          {/* Kopyala Butonu (Referanstaki gibi altın/turuncu çizgili) */}
           <button
             onClick={handleCopy}
-            className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-all duration-300 shrink-0 ${
-              copied ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-[#F59E0B]/10 hover:bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/20'
+            className={`flex flex-col items-center justify-center gap-1.5 w-[72px] h-[64px] rounded-2xl border transition-all duration-300 shrink-0 ${
+              copied 
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' 
+                : 'bg-[#F59E0B]/5 border-[#F59E0B]/20 hover:bg-[#F59E0B]/10 hover:border-[#F59E0B]/40 text-[#F59E0B]'
             }`}
           >
-            {copied ? <Check size={18} /> : <Copy size={18} />}
-            <span className="text-[9px] font-bold uppercase tracking-wider">{copied ? 'Kopyalandı' : 'Kopyala'}</span>
+            {copied ? <Check size={20} strokeWidth={2.5} /> : <Copy size={20} strokeWidth={2.5} />}
+            <span className="text-[9px] font-bold tracking-wider">
+              {copied ? 'ALINDI' : 'KOPYALA'}
+            </span>
           </button>
+
         </div>
       </div>
 
-      {/* --- 3. POWERED BY TAPTAP (Görselle Birebir Kart Tasarımı) --- */}
-      <div className="relative z-10 mt-auto pt-24 pb-12 flex flex-col items-center">
-        {/* TapTap Siyah İç Kart Logosu */}
-        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl py-3 px-6 flex flex-col items-center shadow-2xl mb-4">
-          <span className="text-2xl font-black text-white tracking-tighter mb-1">TapTap.</span>
-          <span className="text-[5px] text-neutral-500 tracking-[0.3em] font-bold">PREMIUM</span>
-          <span className="text-[5px] text-neutral-500 tracking-[0.3em] font-bold">NFC ÇÖZÜMLERİ</span>
+      {/* --- 2. ALT KISIM: KUSURSUZ MERKEZLİ HALKALAR VE LOGO --- */}
+      {/* Tüm halkalar aynı merkeze (items-center justify-center) oturtuldu */}
+      <div className="relative h-[35vh] w-full flex flex-col items-center justify-center z-10">
+        
+        {/* Glow Halkalar (Hepsi aynı merkezden dışa doğru büyüyor) */}
+        <div className="absolute w-[1200px] h-[1200px] rounded-full border border-[#F59E0B]/10 pointer-events-none"></div>
+        <div className="absolute w-[800px] h-[800px] rounded-full border-[1.5px] border-[#F59E0B]/15 pointer-events-none"></div>
+        <div className="absolute w-[500px] h-[500px] rounded-full border-[2px] border-[#F59E0B]/20 pointer-events-none"></div>
+        <div className="absolute w-[280px] h-[280px] rounded-full border-[3px] border-[#F59E0B]/40 shadow-[0_0_60px_rgba(245,158,11,0.2)] pointer-events-none"></div>
+        
+        {/* Merkez Işık Patlaması */}
+        <div className="absolute w-[150px] h-[150px] bg-[#F59E0B] blur-[90px] opacity-30 pointer-events-none"></div>
+
+        {/* TapTap Siyah Kart Logosu (Tam halkaların merkezinde) */}
+        <div className="relative z-20 flex flex-col items-center mt-[-40px]">
+          <div className="bg-[#050505] border border-[#1a1a1a] rounded-xl py-3.5 px-7 flex flex-col items-center shadow-[0_10px_40px_rgba(0,0,0,0.8)] mb-4">
+            <span className="text-2xl font-black text-white tracking-tighter mb-1">TapTap.</span>
+            <span className="text-[5px] text-neutral-500 tracking-[0.3em] font-bold">PREMIUM</span>
+            <span className="text-[5px] text-neutral-500 tracking-[0.3em] font-bold">NFC ÇÖZÜMLERİ</span>
+          </div>
+          
+          <span className="text-[9px] font-bold text-neutral-500 tracking-[0.2em] uppercase mb-1">Powered By</span>
+          <span className="text-sm font-bold text-neutral-300 tracking-wide">TapTap</span>
         </div>
-        <span className="text-[10px] font-bold text-neutral-500 tracking-[0.2em] uppercase mb-1">Powered By</span>
-        <span className="text-[15px] font-bold text-neutral-300 tracking-wide">TapTap</span>
+
       </div>
 
-      {/* --- 4. OTOMATİK KOPYALAMA BİLDİRİMİ (Premium Toast Uyarı) --- */}
+      {/* --- 3. OTOMATİK KOPYALAMA BİLDİRİMİ (Toast) --- */}
       <div 
-        className={`fixed bottom-12 left-1/2 -translate-x-1/2 bg-white text-black px-6 py-3.5 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.5)] z-50 flex items-center gap-3 transition-all duration-500 ease-out ${
-          showToast ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-10 scale-95 pointer-events-none'
+        className={`fixed top-10 left-1/2 -translate-x-1/2 bg-[#111] border border-[#222] text-white px-5 py-3 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 flex items-center gap-3 transition-all duration-500 ease-out ${
+          showToast ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-10 scale-95 pointer-events-none'
         }`}
       >
         <div className="bg-emerald-500 rounded-full p-1">
-          <Check size={14} className="text-white" strokeWidth={3} />
+          <Check size={12} className="text-white" strokeWidth={3} />
         </div>
-        <span className="font-extrabold text-sm tracking-wide">IBAN Kopyalandı</span>
+        <span className="font-bold text-xs tracking-wide">IBAN Kopyalandı</span>
       </div>
 
     </div>
