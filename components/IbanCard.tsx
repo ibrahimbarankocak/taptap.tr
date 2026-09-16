@@ -82,7 +82,7 @@ export default function IbanCard({ customer }: { customer: any }) {
             </span>
           </div>
 
-          <button
+        <button
             onClick={handleCopy}
             className={`flex flex-col items-center justify-center gap-1 sm:gap-1.5 w-[64px] sm:w-[72px] h-[56px] sm:h-[64px] rounded-2xl border transition-all duration-300 shrink-0 ${
               copied 
@@ -92,10 +92,9 @@ export default function IbanCard({ customer }: { customer: any }) {
           >
             {copied ? <Check size={18} strokeWidth={2.5} /> : <Copy size={18} strokeWidth={2.5} />}
             <span className="text-[8px] sm:text-[9px] font-bold tracking-wider">
-              {copied ? 'ALINDI' : 'KOPYALA'}
+              {copied ? 'KOPYALANDI' : 'KOPYALA'}
             </span>
           </button>
-
         </div>
       </div>
 
