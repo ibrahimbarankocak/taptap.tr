@@ -174,7 +174,7 @@ export default function IbanCard({ customer }: { customer: any }) {
 
         <div className="absolute left-1/2 -translate-x-1/2 bottom-[-20px] w-[480px] h-[140px] bg-[#D97706]/10 blur-[70px] rounded-full pointer-events-none"></div>
 
-        {/* Resmi Kanallar ve Butonlar */}
+        {/* Resmi Kanallar ve Butonlar (Zımbırtı yazı uçuruldu) */}
         <div className="relative z-20 flex flex-col items-center gap-2 mt-2">
           
           <span className="text-[9px] font-bold tracking-[0.2em] text-neutral-500 uppercase">
@@ -209,9 +209,6 @@ export default function IbanCard({ customer }: { customer: any }) {
             </a>
           </div>
 
-          <span className="text-[8px] font-bold tracking-[0.25em] text-neutral-600 uppercase mt-0.5">
-            TapTap Güvenceli Ödeme Altyapısı
-          </span>
         </div>
 
       </div>
