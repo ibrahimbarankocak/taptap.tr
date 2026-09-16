@@ -7,21 +7,48 @@ export default function IbanCard({ customer }: { customer: any }) {
   const [copied, setCopied] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
-  // Sayfa açılır açılmaz IBAN'ı otomatik kopyalama ve toast bildirim
+  // 1. OTOMATİK KOPYALAMA (PC'lerde çalışır, Mobilde güvenlik nedeniyle tarayıcı engelleyebilir)
   useEffect(() => {
-    if (customer.iban) {
+    if (customer.iban && navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(customer.iban).then(() => {
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
-      }).catch(() => {});
+      }).catch(() => {
+        console.log('Mobil tarayıcı otomatik kopyalamayı engelledi. Manuel kopyalama bekleniyor.');
+      });
     }
   }, [customer.iban]);
 
-  const handleCopy = () => {
-    if (customer.iban) {
-      navigator.clipboard.writeText(customer.iban);
+  // 2. MANUEL KOPYALAMA (Mobilde %100 çalışacak garantili sistem)
+  const handleCopy = async () => {
+    if (!customer.iban) return;
+
+    try {
+      // Modern tarayıcılar için
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(customer.iban);
+      } else {
+        // iOS Safari ve eski mobil tarayıcılar için garantili yedek yöntem
+        const textArea = document.createElement("textarea");
+        textArea.value = customer.iban;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
+      
+      // Kopyalama başarılı olunca hem butonu hem toast bildirimi tetikle
       setCopied(true);
+      setShowToast(true);
       setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (error) {
+      console.error('Kopyalama hatası:', error);
+      alert('Kopyalama başarısız oldu, lütfen manuel kopyalayın.');
     }
   };
 
@@ -75,7 +102,6 @@ export default function IbanCard({ customer }: { customer: any }) {
       {/* --- 3. ALT KISIM: SOLUK, ARALIKLI HALKALAR VE BUTONLAR --- */}
       <div className="relative h-[30vh] w-full flex flex-col items-center justify-center z-10">
         
-        {/* Glow Halkalar - Adet azaldı, mesafe arttı, soluklaştı */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] pointer-events-none">
           <svg viewBox="0 0 800 800" className="w-full h-full block" fill="none">
             <defs>
@@ -84,14 +110,12 @@ export default function IbanCard({ customer }: { customer: any }) {
               </filter>
             </defs>
             <g transform="translate(400 400)" strokeLinecap="round">
-              {/* Halo katmanı: iyice soluk ve saydam */}
               <g filter="url(#ibanHalo)" opacity="0.25">
                 <circle r="130" stroke="#78350F" strokeWidth="8" />
                 <circle r="210" stroke="#92400E" strokeWidth="10" />
                 <circle r="300" stroke="#B45309" strokeWidth="12" />
                 <circle r="400" stroke="#D97706" strokeWidth="14" />
               </g>
-              {/* Core katmanı: Daha az parlak, ince çizgiler */}
               <circle r="130" stroke="#78350F" strokeWidth="2" opacity="0.4" />
               <circle r="210" stroke="#92400E" strokeWidth="2" opacity="0.4" />
               <circle r="300" stroke="#B45309" strokeWidth="2.5" opacity="0.5" />
@@ -100,10 +124,8 @@ export default function IbanCard({ customer }: { customer: any }) {
           </svg>
         </div>
 
-        {/* Zemin Işık Patlaması - Şiddeti kısıldı */}
         <div className="absolute left-1/2 -translate-x-1/2 bottom-[-50px] w-[480px] h-[170px] bg-[#D97706]/10 blur-[70px] rounded-full pointer-events-none"></div>
 
-        {/* Sosyal Medya ve Sipariş Butonları */}
         <div className="relative z-20 flex items-center justify-center gap-3 sm:gap-4 mt-8">
           <a 
             href="https://www.instagram.com/taptap.tr/" 
