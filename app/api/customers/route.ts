@@ -14,20 +14,21 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { 
-      full_name, slug, card_type, job_title, company, phone, email, iban, address, instagram, linkedin, twitter, website, profile_image 
+      full_name, slug, card_type, account_holder, job_title, company, phone, email, iban, address, instagram, linkedin, twitter, website, profile_image 
     } = body;
 
     if (!full_name || !slug) {
-      return NextResponse.json({ success: false, error: 'Ad Soyad ve Slug alanları zorunludur.' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Ad Soyad / İşletme Adı ve Slug alanları zorunludur.' }, { status: 400 });
     }
 
     const insertCustomer = await db.execute({
-      sql: `INSERT INTO customers (full_name, slug, card_type, job_title, company, phone, email, iban, address, profile_image)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+      sql: `INSERT INTO customers (full_name, slug, card_type, account_holder, job_title, company, phone, email, iban, address, profile_image)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
       args: [
         full_name, 
         slug.trim().toLowerCase(), 
-        card_type || 'premium', // Kart tipini ekledik, boş gelirse premium ata
+        card_type || 'premium',
+        account_holder || '',
         job_title || '', 
         company || '', 
         phone || '', 
@@ -38,7 +39,6 @@ export async function POST(request: Request) {
       ]
     });
 
-    // RETURNING id sayesinde son eklenen ID'yi alıyoruz
     const customerId = insertCustomer.rows[0].id;
 
     if (instagram) await db.execute({ sql: 'INSERT INTO social_links (customer_id, platform, url) VALUES (?, ?, ?)', args: [customerId, 'instagram', instagram] });
