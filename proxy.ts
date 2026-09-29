@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { SESSION_COOKIE, verifySessionToken } from '@/lib/session';
 
-export function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname }  = request.nextUrl;
 
   // Eğer kullanıcı /admin/login sayfasına gitmeye çalışıyorsa dokunma, geçsin
@@ -11,10 +12,10 @@ export function middleware(request: NextRequest) {
 
   // Eğer yol /admin ile başlıyorsa (ve login değilse) güvenliği işlet
   if (pathname.startsWith('/admin')) {
-    const authCookie = request.cookies.get('taptap_admin_auth');
+    const authCookie = request.cookies.get(SESSION_COOKIE);
 
-    // Çerez yoksa veya 'authenticated' değilse şutla login'e
-    if (!authCookie || authCookie.value !== 'authenticated') {
+    // Çerez yoksa veya imzası geçersizse şutla login'e
+    if (!(await verifySessionToken(authCookie?.value))) {
       const loginUrl = new URL('/admin/login', request.url);
       return NextResponse.redirect(loginUrl);
     }

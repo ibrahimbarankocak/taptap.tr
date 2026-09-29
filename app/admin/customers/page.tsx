@@ -16,8 +16,10 @@ export default function AdminCustomersPage() {
     fetch('/api/customers')
       .then((res) => res.json())
       .then((data) => {
-        setCustomers(data);
-        setFilteredCustomers(data);
+        // Bu sayfa sadece Premium ve IBAN kartları içindir (Google yorum kartları ayrı sayfada)
+        const list = Array.isArray(data) ? data.filter((c) => c.card_type !== 'google') : [];
+        setCustomers(list);
+        setFilteredCustomers(list);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -74,7 +76,7 @@ export default function AdminCustomersPage() {
   const ibanCount = customers.filter(c => c.card_type === 'iban').length;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white p-8">
+    <div className="min-h-screen bg-neutral-950 text-white px-4 py-6 sm:p-8">
       <div className="max-w-4xl mx-auto">
         
         {/* Üst Navigasyon */}
@@ -96,7 +98,7 @@ export default function AdminCustomersPage() {
         </div>
 
         {/* SEKMELER (TABS) */}
-        <div className="flex items-center gap-2 mb-6 bg-neutral-900 p-1.5 rounded-2xl border border-neutral-800 w-fit">
+        <div className="flex flex-wrap items-center gap-2 mb-6 bg-neutral-900 p-1.5 rounded-2xl border border-neutral-800 w-fit max-w-full">
           <button
             onClick={() => setActiveTab('all')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -152,29 +154,40 @@ export default function AdminCustomersPage() {
                 const isIbanCard = customer.card_type === 'iban';
 
                 return (
-                  <div key={customer.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex items-center justify-between shadow-md hover:border-neutral-700 transition-all relative">
-                    
-                    <div className="flex items-center gap-4">
-                      {customer.profile_image && !isIbanCard ? (
-                        <img src={customer.profile_image} alt={customer.full_name} className="w-12 h-12 rounded-full object-cover border border-neutral-700 shadow" />
+                  <div key={customer.id} className={`animate-fade-up bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex items-center justify-between shadow-md hover:border-neutral-700 transition-colors relative ${openMenuId === customer.id ? 'z-30' : 'z-0'}`}>
+
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                      {customer.avatar_version && !isIbanCard ? (
+                        <img
+                          src={`/${customer.slug}/avatar?v=${encodeURIComponent(customer.avatar_version)}`}
+                          alt={customer.full_name}
+                          loading="lazy"
+                          decoding="async"
+                          width={48}
+                          height={48}
+                          className="w-12 h-12 rounded-full object-cover border border-neutral-700 shadow shrink-0"
+                        />
                       ) : (
                         <div className={`w-12 h-12 rounded-full border border-neutral-700 flex items-center justify-center font-bold text-lg shadow-inner shrink-0 ${
                           isIbanCard ? 'bg-orange-500/10 text-[#F59E0B] border-orange-500/30' : 'bg-neutral-800 text-white'
                         }`}>
-                          {isIbanCard ? <Wallet size={20} /> : customer.full_name.charAt(0).toUpperCase()}
+                          {isIbanCard ? <Wallet size={20} /> : customer.full_name.charAt(0).toLocaleUpperCase('tr')}
                         </div>
                       )}
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-base text-white">{customer.full_name}</h3>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+                          <h3 className="font-bold text-base text-white break-words line-clamp-2 min-w-0">{customer.full_name}</h3>
                           {/* Kart tipi rozeti */}
-                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                          <span className={`shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                             isIbanCard ? 'bg-orange-500/10 text-[#F59E0B] border border-orange-500/20' : 'bg-neutral-800 text-neutral-300'
                           }`}>
                             {isIbanCard ? 'IBAN Kartı' : 'Premium'}
                           </span>
+                          {isIbanCard && customer.theme === 'white' && (
+                            <span className="shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-white text-black">Beyaz</span>
+                          )}
                         </div>
-                        <p className="text-xs text-neutral-400">
+                        <p className="text-xs text-neutral-400 truncate">
                           {isIbanCard ? (customer.iban || 'IBAN girilmemiş') : (customer.job_title || 'Unvan belirtilmemiş')} {!isIbanCard && customer.company ? `• ${customer.company}` : ''}
                         </p>
                         <span className="inline-block mt-1 text-[10px] font-mono bg-neutral-950 px-2 py-0.5 rounded text-neutral-400 border border-neutral-800">
@@ -184,7 +197,7 @@ export default function AdminCustomersPage() {
                     </div>
 
                     {/* Butonlar */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
                       <button 
                         onClick={() => handleCopyLink(customer.slug, customer.id)}
                         className="flex items-center justify-center w-10 h-10 bg-neutral-950 border border-neutral-800 rounded-xl text-neutral-300 hover:text-white hover:border-neutral-700 transition-colors cursor-pointer"

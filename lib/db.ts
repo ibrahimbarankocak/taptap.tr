@@ -20,7 +20,7 @@ const getDb = () => {
 const db = new Proxy({} as Client, {
   get(target, prop) {
     const client = getDb();
-    const value = (client as any)[prop];
+    const value = (client as unknown as Record<string | symbol, unknown>)[prop];
     return typeof value === 'function' ? value.bind(client) : value;
   },
 });

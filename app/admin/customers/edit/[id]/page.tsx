@@ -4,6 +4,10 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, ImagePlus, Camera, X, Check, CreditCard, Wallet, Edit3 } from 'lucide-react';
 import Link from 'next/link';
 import Cropper from 'react-easy-crop';
+import { toSlugInput } from '@/lib/validate';
+import SlugStatus from '@/components/SlugStatus';
+import ThemePicker from '@/components/ThemePicker';
+import ExtraIbans, { type ExtraIban } from '@/components/ExtraIbans';
 
 const createImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
@@ -37,6 +41,8 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     slug: '',
     card_type: 'premium',
     account_holder: '',
+    theme: 'black',
+    extra_ibans: [] as ExtraIban[],
     job_title: '',
     company: '',
     phone: '',
@@ -66,12 +72,18 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
       .then((data) => {
         if (data.success) {
           const c = data.customer;
+          if (c.card_type === 'google') {
+            router.replace('/admin/google');
+            return;
+          }
           const s = data.socials || {};
           setFormData({
             full_name: c.full_name || '',
             slug: c.slug || '',
             card_type: c.card_type || 'premium',
             account_holder: c.account_holder || '',
+            theme: String(c.theme_color || '').toLowerCase() === '#ffffff' ? 'white' : 'black',
+            extra_ibans: data.extra_ibans || [],
             job_title: c.job_title || '',
             company: c.company || '',
             phone: c.phone || '',
@@ -97,7 +109,9 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
   }, [id, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    // Slug her zaman geçerli URL biçiminde tutulur ("Ahmet Yılmaz" -> "ahmet-yilmaz")
+    setFormData({ ...formData, [name]: name === 'slug' ? toSlugInput(value, 60) : value });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,7 +177,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white p-8">
+    <div className="min-h-screen bg-neutral-950 text-white px-4 py-6 sm:p-8">
       <div className="max-w-2xl mx-auto">
         
         <div className="mb-8 pb-4 border-b border-neutral-900">
@@ -233,8 +247,17 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                 <span className="font-bold text-sm">IBAN Kartı</span>
                 <span className="text-[10px] mt-1 text-center opacity-70">Turuncu konseptli anında IBAN kopyalama</span>
               </button>
+
             </div>
           </div>
+
+          {formData.card_type === 'iban' && (
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">Kart Rengi</h3>
+              <ThemePicker value={formData.theme as 'black' | 'white'} onChange={(theme) => setFormData({ ...formData, theme })} />
+              <p className="text-[11px] text-neutral-500 mt-2">Müşterinin telefonunda açılan ekran kartın rengine göre koyu ya da açık olur.</p>
+            </div>
+          )}
 
           <div>
             <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">Temel Bilgiler</h3>
@@ -248,11 +271,13 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
               <div>
                 <label className="block text-xs font-medium text-neutral-400 mb-1.5">Profil URL Uzantısı (Slug) *</label>
                 <input type="text" name="slug" required className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors font-mono" value={formData.slug} onChange={handleChange} />
+                <p className="text-[11px] text-amber-400/80 mt-1.5">Dikkat: karta yazılmış adresi değiştirirsen eski kart çalışmaz.</p>
+                <SlugStatus slug={formData.slug} excludeId={id} auto onUse={(slug) => setFormData({ ...formData, slug })} onRegenerate={() => {}} />
               </div>
               
               {formData.card_type === 'iban' && (
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-neutral-400 mb-1.5">Hesap Sahibi Ad Soyad *</label>
+                  <label className="block text-xs font-medium text-neutral-400 mb-1.5">{formData.extra_ibans.length ? "1. IBAN'ın hesap sahibi *" : 'Hesap Sahibi Ad Soyad *'}</label>
                   <input type="text" name="account_holder" required className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.account_holder} onChange={handleChange} />
                 </div>
               )}
@@ -318,7 +343,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">IBAN</label>
+                <label className="block text-xs font-medium text-neutral-400 mb-1.5">{formData.extra_ibans.length ? '1. IBAN' : 'IBAN'}</label>
                 <input 
                   type="text" 
                   name="iban" 
@@ -328,6 +353,10 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                   onChange={handleChange} 
                 />
               </div>
+
+              {formData.card_type === 'iban' && (
+                <ExtraIbans value={formData.extra_ibans} onChange={(extra_ibans) => setFormData({ ...formData, extra_ibans })} />
+              )}
               
               {formData.card_type === 'premium' && (
                 <div>

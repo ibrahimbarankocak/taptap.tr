@@ -1,9 +1,13 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, UserPlus, Save, ImagePlus, Camera, X, Check, CreditCard, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import Cropper from 'react-easy-crop';
+import { toSlugInput, suggestSlug, MAX_SLUG_LENGTH } from '@/lib/validate';
+import SlugStatus from '@/components/SlugStatus';
+import ThemePicker from '@/components/ThemePicker';
+import ExtraIbans, { type ExtraIban } from '@/components/ExtraIbans';
 
 const createImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
@@ -33,6 +37,8 @@ export default function NewCustomerPage() {
     slug: '',
     card_type: 'premium',
     account_holder: '',
+    theme: 'black',
+    extra_ibans: [] as ExtraIban[],
     job_title: '',
     company: '',
     phone: '',
@@ -47,7 +53,48 @@ export default function NewCustomerPage() {
   });
 
   const [loading, setLoading] = useState(false);
+  // Slug başlıktan otomatik üretilir; kullanıcı slug'ı elle değiştirince otomatik güncelleme durur
+  const [slugTouched, setSlugTouched] = useState(false);
   const router = useRouter();
+
+  // CRM'den "Profil Oluştur" ile gelindiyse (?fromOrder=ID) formu siparişten doldur
+  const getFromOrder = () => new URLSearchParams(window.location.search).get('fromOrder');
+  useEffect(() => {
+    const orderId = getFromOrder();
+    if (!orderId) return;
+    fetch(`/api/crm/orders/${encodeURIComponent(orderId)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.success) return;
+        const o = data.order;
+        const f = o.extracted || {};
+        const ibanParam = new URLSearchParams(window.location.search).get('iban');
+        const allInOne = ibanParam === 'all' && Array.isArray(f.ibans) && f.ibans.length > 1;
+        const ibanIndex = allInOne ? 0 : Number(ibanParam ?? -1);
+        const entry = ibanIndex >= 0 ? f.ibans?.[ibanIndex] : undefined;
+        const isIban = o.card_type === 'iban' || !!entry || (f.card_types || []).includes('iban') && !(f.card_types || []).includes('premium');
+        const name = (isIban ? f.business_name || f.account_holder : f.full_name) || o.buyer_name || '';
+        const phone = f.phone || o.buyer_phone || '';
+        setFormData((prev) => ({
+          ...prev,
+          card_type: isIban ? 'iban' : 'premium',
+          full_name: name,
+          slug: suggestSlug(name),
+          account_holder: entry?.holder || f.account_holder || '',
+          theme: entry?.theme || f.theme || 'black',
+          job_title: f.job_title || '',
+          company: isIban ? '' : f.business_name || '',
+          phone: phone ? (phone.startsWith('90') ? `+${phone}` : phone) : '',
+          email: f.email || o.buyer_email || '',
+          iban: entry?.iban || f.iban || '',
+          // "Hepsini tek kartta": ilk IBAN ana alanda, diğerleri ek IBAN olarak
+          extra_ibans: allInOne ? f.ibans.slice(1).map((e: { iban: string; holder?: string }) => ({ iban: e.iban, holder: e.holder || '' })) : [],
+          instagram: f.instagram ? `https://instagram.com/${f.instagram}` : '',
+          website: f.website || '',
+        }));
+      })
+      .catch(() => {});
+  }, []);
 
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -56,7 +103,17 @@ export default function NewCustomerPage() {
   const [showCropModal, setShowCropModal] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'slug') {
+      // Elle yazılan slug her zaman geçerli URL biçiminde tutulur
+      setSlugTouched(true);
+      setFormData({ ...formData, slug: toSlugInput(value) });
+    } else if (name === 'full_name' && !slugTouched) {
+      // Başlık yazılırken slug kendiliğinden oluşur: "ENES ULU" -> "enesulu", "SARAN AVM / Kuveyttürk" -> "saranavm"
+      setFormData({ ...formData, full_name: value, slug: suggestSlug(value) });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,6 +158,34 @@ export default function NewCustomerPage() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        const fromOrder = getFromOrder();
+        if (fromOrder) {
+          // Yeni profili siparişe bağla ve CRM'e geri dön.
+          // Çoklu IBAN siparişinde profil, hangi IBAN için oluşturulduysa o girdiye bağlanır.
+          const ibanParam = new URLSearchParams(window.location.search).get('iban');
+          const ibanIndex = ibanParam === 'all' ? 0 : Number(ibanParam ?? -1);
+          const body: Record<string, unknown> = { status: 'ready' };
+          if (ibanIndex <= 0) body.customer_id = data.id;
+          if (ibanIndex >= 0) {
+            const current = await fetch(`/api/crm/orders/${encodeURIComponent(fromOrder)}`).then((r) => r.json());
+            const extracted = current.order?.extracted;
+            if (extracted?.ibans?.length) {
+              // tek kartta birleştirildiyse tüm IBAN'lar bu profile, değilse sadece seçilen IBAN
+              extracted.ibans = extracted.ibans.map((e: Record<string, unknown>, i: number) =>
+                ibanParam === 'all' || i === ibanIndex ? { ...e, customer_id: data.id, slug: formData.slug } : e
+              );
+              body.extracted = extracted;
+            }
+          }
+          await fetch(`/api/crm/orders/${encodeURIComponent(fromOrder)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          router.push('/admin/crm');
+          router.refresh();
+          return;
+        }
         router.push('/admin/customers');
         router.refresh();
       } else {
@@ -114,7 +199,7 @@ export default function NewCustomerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white p-8">
+    <div className="min-h-screen bg-neutral-950 text-white px-4 py-6 sm:p-8">
       <div className="max-w-2xl mx-auto">
         
         <div className="mb-8 pb-4 border-b border-neutral-900">
@@ -184,8 +269,17 @@ export default function NewCustomerPage() {
                 <span className="font-bold text-sm">IBAN Kartı</span>
                 <span className="text-[10px] mt-1 text-center opacity-70">Turuncu konseptli anında IBAN kopyalama</span>
               </button>
+
             </div>
           </div>
+
+          {formData.card_type === 'iban' && (
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">Kart Rengi</h3>
+              <ThemePicker value={formData.theme as 'black' | 'white'} onChange={(theme) => setFormData({ ...formData, theme })} />
+              <p className="text-[11px] text-neutral-500 mt-2">Müşterinin telefonunda açılan ekran kartın rengine göre koyu ya da açık olur.</p>
+            </div>
+          )}
 
           <div>
             <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4 border-b border-neutral-800 pb-2">Temel Bilgiler</h3>
@@ -197,13 +291,19 @@ export default function NewCustomerPage() {
                 <input type="text" name="full_name" required className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.full_name} onChange={handleChange} />
               </div>
               <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">Profil URL Uzantısı (Slug) *</label>
-                <input type="text" name="slug" required className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors font-mono" value={formData.slug} onChange={handleChange} />
+                <label className="block text-xs font-medium text-neutral-400 mb-1.5">Kart Adresi (Slug) * <span className="text-neutral-600">en fazla {MAX_SLUG_LENGTH} karakter</span></label>
+                <input type="text" name="slug" required maxLength={MAX_SLUG_LENGTH} placeholder="başlıktan otomatik oluşur" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors font-mono" value={formData.slug} onChange={handleChange} />
+                <SlugStatus
+                  slug={formData.slug}
+                  auto={!slugTouched}
+                  onUse={(slug) => { setSlugTouched(true); setFormData({ ...formData, slug }); }}
+                  onRegenerate={() => { setSlugTouched(false); setFormData({ ...formData, slug: suggestSlug(formData.full_name) }); }}
+                />
               </div>
               
               {formData.card_type === 'iban' && (
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-neutral-400 mb-1.5">Hesap Sahibi Ad Soyad *</label>
+                  <label className="block text-xs font-medium text-neutral-400 mb-1.5">{formData.extra_ibans.length ? "1. IBAN'ın hesap sahibi *" : 'Hesap Sahibi Ad Soyad *'}</label>
                   <input type="text" name="account_holder" required className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-neutral-600 transition-colors" value={formData.account_holder} onChange={handleChange} />
                 </div>
               )}
@@ -269,7 +369,7 @@ export default function NewCustomerPage() {
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">IBAN</label>
+                <label className="block text-xs font-medium text-neutral-400 mb-1.5">{formData.extra_ibans.length ? '1. IBAN' : 'IBAN'}</label>
                 <input 
                   type="text" 
                   name="iban" 
@@ -279,6 +379,10 @@ export default function NewCustomerPage() {
                   onChange={handleChange} 
                 />
               </div>
+
+              {formData.card_type === 'iban' && (
+                <ExtraIbans value={formData.extra_ibans} onChange={(extra_ibans) => setFormData({ ...formData, extra_ibans })} />
+              )}
               
               {formData.card_type === 'premium' && (
                 <div>

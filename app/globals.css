@@ -1,26 +1,225 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #050505;
+  --foreground: #ededed;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Animasyonlar — class olarak: animate-fade-up, animate-float, ...
+     Giriş animasyonları "backwards": bitince öğeden tamamen kalkar. ("both" kalıcı katman oluşturur;
+     açılır menüler alttaki satırın arkasında kalıyor, fixed modallar kayıyordu.) */
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-fade-in: fade-in 0.5s ease-out backwards;
+  --animate-scale-in: scale-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-glow: glow 4s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.8s ease-in-out infinite;
+  --animate-spin-slow: spin 8s linear infinite;
+  --animate-aurora: aurora 18s ease-in-out infinite alternate;
+  --animate-ring: ring-pulse 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  --animate-pop: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  --animate-shake: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) backwards;
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(18px); filter: blur(4px); }
+    to { opacity: 1; transform: none; filter: none; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.92); filter: blur(6px); }
+    to { opacity: 1; transform: none; filter: none; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes glow {
+    0%, 100% { opacity: 0.45; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.08); }
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-120%) skewX(-20deg); }
+    60%, 100% { transform: translateX(220%) skewX(-20deg); }
+  }
+  @keyframes aurora {
+    0% { transform: translate3d(-10%, -8%, 0) rotate(0deg) scale(1); }
+    50% { transform: translate3d(8%, 6%, 0) rotate(20deg) scale(1.15); }
+    100% { transform: translate3d(-4%, 10%, 0) rotate(-10deg) scale(1.05); }
+  }
+  @keyframes ring-pulse {
+    0% { transform: scale(0.85); opacity: 0.6; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+  @keyframes shake {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX(4px); }
+    30%, 50%, 70% { transform: translateX(-8px); }
+    40%, 60% { transform: translateX(8px); }
+  }
+  @keyframes pop {
+    0% { transform: scale(0.9); }
+    60% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+html {
+  /* iPhone'u yan çevirince yazıların kendiliğinden büyümesini engelle */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* iPhone Safari 16px'ten küçük yazılı bir kutuya dokununca sayfayı yakınlaştırır ve geri uzaklaştırmaz;
+   panel "zoom'lu ve kayıyor" görünüyordu. Telefonda tüm form alanları en az 16px. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+}
+
+/* Sırayla beliren öğeler için gecikme: style={{ '--i': 2 }} */
+.stagger {
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+/* Kartın üstünden geçen ışık yansıması */
+.shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent);
+  animation: var(--animate-shimmer);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* İnce degrade çerçeve (premium kart kenarı) */
+.gradient-border {
+  position: relative;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--gb-bg, #0b0b0b), var(--gb-bg, #0b0b0b)) padding-box,
+    linear-gradient(140deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.12)) border-box;
+}
+
+/* Hafif kumlu doku (arka plan derinliği) */
+.grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Basınca hafif içe çökme — tüm butonlarda tutarlı his */
+/* (transform yerine ayrı scale/translate özellikleri: giriş animasyonlarıyla çakışmasın) */
+.press {
+  transition: scale 0.18s cubic-bezier(0.16, 1, 0.3, 1), translate 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s,
+    border-color 0.2s, color 0.2s, box-shadow 0.3s, opacity 0.2s;
+}
+.press:active {
+  scale: 0.96;
+}
+
+/* Hareket hassasiyeti olan kullanıcılar için animasyonları kapat */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------- Tanıtım sayfası (ana sayfa) ---------------- */
+
+/* Kaydırınca belirme: sadece JS hazırsa gizle (JS yoksa içerik görünür kalır) */
+.fx-ready [data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  filter: blur(4px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1), filter 0.9s;
+  transition-delay: calc(var(--d, 0) * 90ms);
+}
+.fx-ready [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+[data-speed] {
+  will-change: transform;
+}
+
+/* Neon halkalar: yavaşça dönüp nefes alır */
+.neon-ring {
+  transform-origin: 300px 300px;
+  animation: neon-spin 14s linear infinite, neon-breathe 4s ease-in-out infinite;
+}
+@keyframes neon-spin {
+  to { rotate: 360deg; }
+}
+@keyframes neon-breathe {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+/* Kayan yazı şeridi */
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+.marquee:hover {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* Havada süzülen kartlar (paralaks katmanının içinde; transform çakışmasın diye translate kullanır) */
+.card-float {
+  animation: card-float 7s ease-in-out infinite;
+}
+@keyframes card-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -14px; }
+}
+
+/* Parlak degrade yazı */
+.text-neon {
+  background: linear-gradient(90deg, #fde68a, #f97316 30%, #ec4899 60%, #8b5cf6 85%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background-size: 200% auto;
+  animation: neon-text 8s linear infinite;
+}
+@keyframes neon-text {
+  to { background-position: 200% center; }
 }
