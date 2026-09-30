@@ -39,7 +39,7 @@ export function parseStoreHtml(html: string): StoreProduct[] {
       id,
       title: decode(title),
       url: `${STORE_URL}/${id}`,
-      image: image.replace('/pictures_mid/', '/pictures_large/'),
+      image, // orta boy (pictures_mid): kart ızgarası için yeterli, telefonda bellek dostu
       price: card.match(/price-current[^>]*data-price="([^"]+)"/)?.[1],
       oldPrice: card.match(/price-old[^>]*data-price="([^"]+)"/)?.[1],
       discount: card.match(/badge-discount">([^<]+)</)?.[1]?.trim(),

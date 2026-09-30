@@ -82,7 +82,7 @@ export default async function HomePage() {
       {/* ---------- ÜST MENÜ ---------- */}
       <header className="fixed top-0 inset-x-0 z-50 pt-[env(safe-area-inset-top)]">
         <div className="mx-auto max-w-6xl px-4 mt-3">
-          <nav className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/50 backdrop-blur-xl px-4 py-2.5">
+          <nav className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#0a0a0a] md:bg-black/50 md:backdrop-blur-xl px-4 py-2.5">
             <a href="#top" className="text-xl font-black tracking-tighter">TapTap.</a>
             <div className="hidden md:flex items-center gap-7 text-sm text-neutral-400">
               <a href="#kartlar" className="hover:text-white transition-colors">Kartlar</a>
@@ -101,7 +101,7 @@ export default async function HomePage() {
       <section id="top" className="relative min-h-[100svh] flex items-center pt-28 pb-16 overflow-hidden">
         {/* Arka plan: dönen neon halkalar (paralaks) */}
         <div className="pointer-events-none absolute inset-0">
-          <div data-speed="-0.25" className="absolute left-1/2 top-[55%] -translate-x-1/2 -translate-y-1/2 w-[900px] max-w-none opacity-80">
+          <div data-speed="-0.25" className="absolute left-1/2 top-[55%] -translate-x-1/2 -translate-y-1/2 w-[560px] md:w-[900px] max-w-none opacity-80">
             <NeonWaves id="hero" palette="mixed" rings={9} className="w-full h-auto" />
           </div>
           <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#050505] to-transparent" />
@@ -139,22 +139,22 @@ export default async function HomePage() {
           <div className="relative h-[380px] sm:h-[480px] lg:h-[560px]">
             <div data-speed="0.12" className="absolute left-[4%] top-[4%] w-[46%]">
               <div className="card-float" style={{ animationDelay: '-1s' }}>
-                <Image src="/promo/google.jpg" alt="Google yorum NFC kartı" width={600} height={600} priority className="rounded-3xl shadow-[0_40px_100px_-30px_rgba(99,102,241,0.6)] -rotate-6" />
+                <Image src="/promo/google.jpg" alt="Google yorum NFC kartı" width={600} height={600} priority sizes="(max-width: 767px) 45vw, 260px" className="rounded-3xl shadow-lg md:shadow-[0_40px_100px_-30px_rgba(99,102,241,0.6)] -rotate-6" />
               </div>
             </div>
             <div data-speed="-0.08" className="absolute right-[2%] top-[0%] w-[44%]">
               <div className="card-float" style={{ animationDelay: '-3s' }}>
-                <Image src="/promo/iban.jpg" alt="IBAN NFC kartı" width={600} height={600} priority className="rounded-3xl shadow-[0_40px_100px_-30px_rgba(245,158,11,0.6)] rotate-6" />
+                <Image src="/promo/iban.jpg" alt="IBAN NFC kartı" width={600} height={600} priority sizes="(max-width: 767px) 45vw, 260px" className="rounded-3xl shadow-lg md:shadow-[0_40px_100px_-30px_rgba(245,158,11,0.6)] rotate-6" />
               </div>
             </div>
             <div data-speed="0.2" className="absolute left-[10%] bottom-[2%] w-[42%]">
               <div className="card-float" style={{ animationDelay: '-5s' }}>
-                <Image src="/promo/whatsapp.jpg" alt="WhatsApp NFC kartı" width={600} height={600} className="rounded-3xl shadow-[0_40px_100px_-30px_rgba(34,197,94,0.55)] rotate-3" />
+                <Image src="/promo/whatsapp.jpg" alt="WhatsApp NFC kartı" width={600} height={600} sizes="(max-width: 767px) 45vw, 260px" className="rounded-3xl shadow-lg md:shadow-[0_40px_100px_-30px_rgba(34,197,94,0.55)] rotate-3" />
               </div>
             </div>
             <div data-speed="0.05" className="absolute right-[8%] bottom-[6%] w-[44%]">
               <div className="card-float" style={{ animationDelay: '-2s' }}>
-                <Image src="/promo/instagram.jpg" alt="Instagram NFC kartı" width={600} height={600} className="rounded-3xl shadow-[0_40px_100px_-30px_rgba(236,72,153,0.55)] -rotate-3" />
+                <Image src="/promo/instagram.jpg" alt="Instagram NFC kartı" width={600} height={600} sizes="(max-width: 767px) 45vw, 260px" className="rounded-3xl shadow-lg md:shadow-[0_40px_100px_-30px_rgba(236,72,153,0.55)] -rotate-3" />
               </div>
             </div>
           </div>
@@ -198,7 +198,7 @@ export default async function HomePage() {
                   <NeonWaves id={`card-${c.key}`} palette={c.key} rings={6} className="w-full h-full" />
                 </div>
                 <div data-speed="0.06" className="relative mx-auto w-[78%] max-w-sm">
-                  <Image src={c.image} alt={c.title} width={600} height={600} className="rounded-3xl shadow-2xl" />
+                  <Image src={c.image} alt={c.title} width={600} height={600} sizes="(max-width: 767px) 70vw, 380px" className="rounded-3xl shadow-2xl" />
                 </div>
               </div>
               <div className="relative">
@@ -219,7 +219,7 @@ export default async function HomePage() {
       {/* ---------- NASIL ÇALIŞIR ---------- */}
       <section id="nasil" className="relative py-24 sm:py-32 scroll-mt-20 overflow-hidden">
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div data-speed="0.15" className="w-[700px] max-w-none opacity-40">
+          <div data-speed="0.15" className="w-[480px] md:w-[700px] max-w-none opacity-40">
             <NeonWaves id="how" palette="iban" rings={8} className="w-full h-auto" />
           </div>
         </div>
@@ -286,7 +286,7 @@ export default async function HomePage() {
       <section className="relative mx-auto max-w-6xl px-4 py-16">
         <div {...reveal(0)} className="relative overflow-hidden rounded-[2.5rem] border border-white/10 p-8 sm:p-14 text-center">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-pink-600/25 via-purple-600/15 to-orange-500/20" />
-          <div data-speed="-0.12" className="pointer-events-none absolute -right-24 -top-24 w-[420px] opacity-70">
+          <div data-speed="-0.12" className="pointer-events-none absolute -right-24 -top-24 w-[300px] md:w-[420px] opacity-70">
             <NeonWaves id="ig" palette="instagram" rings={6} className="w-full h-auto" />
           </div>
           <div className="relative">
@@ -324,7 +324,7 @@ export default async function HomePage() {
       {/* ---------- SON ÇAĞRI ---------- */}
       <section className="relative overflow-hidden py-24 sm:py-32">
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div data-speed="0.2" className="w-[1000px] max-w-none opacity-70">
+          <div data-speed="0.2" className="w-[560px] md:w-[1000px] max-w-none opacity-70">
             <NeonWaves id="cta" palette="mixed" rings={10} className="w-full h-auto" />
           </div>
         </div>

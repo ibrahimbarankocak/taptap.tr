@@ -9,6 +9,8 @@ export default function ScrollFx() {
   useEffect(() => {
     const root = document.documentElement;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Telefon/tablette paralaks yok: iPhone'da kaydırma sırasında sürekli katman güncellemek belleği zorluyor
+    const smallOrTouch = window.matchMedia('(max-width: 767px), (hover: none)').matches;
     root.classList.add('fx-ready');
 
     const io = new IntersectionObserver(
@@ -24,7 +26,7 @@ export default function ScrollFx() {
     );
     document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
 
-    if (reduce) return () => io.disconnect();
+    if (reduce || smallOrTouch) return () => io.disconnect();
 
     const layers = Array.from(document.querySelectorAll<HTMLElement>('[data-speed]'));
     let frame = 0;

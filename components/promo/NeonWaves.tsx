@@ -23,7 +23,7 @@ export default function NeonWaves({
 }) {
   const colors = PALETTES[palette];
   return (
-    <svg viewBox="0 0 600 600" className={className} aria-hidden fill="none">
+    <svg viewBox="0 0 600 600" className={`neon-spin ${className}`} aria-hidden fill="none">
       <defs>
         <linearGradient id={`g-${id}`} x1="0" y1="0" x2="1" y2="1">
           {colors.map((c, i) => (
@@ -42,7 +42,7 @@ export default function NeonWaves({
           // en dıştaki halka da çizim alanının içinde kalsın (yoksa kenarda düz bir çizgi gibi kesiliyor)
           const r = 55 + i * (230 / Math.max(1, rings - 1));
           return (
-            <g key={i} className="neon-ring" style={{ animationDelay: `${i * -0.45}s` }}>
+            <g key={i}>
               {/* kalın, soluk hale + ince parlak çizgi = neon görünümü (blur filtresi olmadan, telefonda hızlı) */}
               <circle cx="300" cy="300" r={r} strokeWidth={10 - i * 0.6} opacity={0.12} />
               <circle cx="300" cy="300" r={r} strokeWidth={2.2} opacity={0.85 - i * 0.08} strokeDasharray={`${r * 2.2} ${r * 0.9}`} />

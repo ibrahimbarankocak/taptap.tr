@@ -12,7 +12,7 @@ const card = (id, title, price, old, badges = '') => `
 <div class="product-card-price"><div class="price price-current price-new" data-price="${price}"></div>
 ${old ? `<div class="price price-old shopier-store--store-product-card-price-old" data-price="${old}"></div>` : ''}</div></div></a></div>`;
 
-test('ürünler, fiyatlar, indirim ve büyük görsel', () => {
+test('ürünler, fiyatlar, indirim ve görsel', () => {
   const html = card('111', 'IBAN Nfc Kartı ', '499,00 TL', '589,00 TL', '<span class="badge badge-discount">%15 İndirim</span> <span class="badge">Yeni</span>')
     + card('222', '3&#039;lü IBAN Nfc Kartı', '1.199,00 TL', '')
     + card('111', 'IBAN Nfc Kartı ', '499,00 TL', ''); // tekrar eden ürün
@@ -20,7 +20,7 @@ test('ürünler, fiyatlar, indirim ve büyük görsel', () => {
   assert.equal(list.length, 2);
   assert.deepEqual(list[0], {
     id: '111', title: 'IBAN Nfc Kartı', url: 'https://www.shopier.com/TapTapTr/111',
-    image: 'https://cdn.shopier.app/pictures_large/TapTapTr_111.jpg', price: '499,00 TL', oldPrice: '589,00 TL', discount: '%15 İndirim', isNew: true,
+    image: 'https://cdn.shopier.app/pictures_mid/TapTapTr_111.jpg', price: '499,00 TL', oldPrice: '589,00 TL', discount: '%15 İndirim', isNew: true,
   });
   assert.equal(list[1].title, "3'lü IBAN Nfc Kartı");
   assert.equal(list[1].oldPrice, undefined);

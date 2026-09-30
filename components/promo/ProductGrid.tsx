@@ -63,8 +63,8 @@ export default function ProductGrid({ products, storeUrl }: { products: StorePro
                 alt={p.title}
                 loading="lazy"
                 decoding="async"
-                width={600}
-                height={600}
+                width={452}
+                height={452}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               {p.discount && (
