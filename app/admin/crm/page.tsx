@@ -343,7 +343,17 @@ function OrderCard({ order, onSaved }: { order: CrmOrder; onSaved: (o: Partial<C
                     </Link>
                   ))}
 
-                {(t === 'instagram' || t === 'whatsapp' || t === 'other') && (
+                {t === 'whatsapp' && fields.phones && fields.phones.length > 1 ? (
+                  // Pakette birden çok numara: her kart için ayrı link
+                  <div className="space-y-2">
+                    {fields.phones.map((ph, i) => (
+                      <div key={ph}>
+                        <p className="text-[11px] text-neutral-500 mb-1">{i + 1}. kart · +{ph}</p>
+                        <CardLinkRow link={cardLinkFor('whatsapp', { ...fields, phone: ph, whatsapp_link: undefined })} onWritten={markWritten} emptyText="" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (t === 'instagram' || t === 'whatsapp' || t === 'other') && (
                   <CardLinkRow
                     link={cardLinkFor(t, fields)}
                     onWritten={markWritten}
@@ -451,6 +461,25 @@ export default function CrmPage() {
     }
   };
 
+  // Toplu yeniden okuma: iki adımlı onay (tarayıcı confirm() kullanılmıyor)
+  const [reparseAsk, setReparseAsk] = useState(false);
+  const [reparsing, setReparsing] = useState(false);
+  const reparse = async () => {
+    setReparseAsk(false);
+    setReparsing(true);
+    setSyncMsg('');
+    try {
+      const res = await fetch('/api/crm/reparse', { method: 'POST' });
+      const data = await res.json();
+      setSyncMsg(data.success ? `${data.checked} sipariş kontrol edildi, ${data.changed} tanesi güncellendi` : `Hata: ${data.error}`);
+      await load();
+    } catch {
+      setSyncMsg('Sunucuya ulaşılamadı');
+    } finally {
+      setReparsing(false);
+    }
+  };
+
   const updateOrder = (id: string, changes: Partial<CrmOrder>) =>
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, ...changes } : o)));
 
@@ -532,8 +561,33 @@ export default function CrmPage() {
               <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
               {syncing ? 'Senkronize ediliyor...' : "Shopier'dan Çek"}
             </button>
+            <button
+              type="button"
+              onClick={() => setReparseAsk((v) => !v)}
+              disabled={reparsing}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-neutral-700 text-sm font-semibold text-neutral-300 hover:text-white hover:border-neutral-500 disabled:opacity-50 cursor-pointer"
+            >
+              <Wand2 size={16} className={reparsing ? 'animate-pulse' : ''} />
+              {reparsing ? 'Okunuyor...' : 'Notları Yeniden Oku'}
+            </button>
           </div>
         </div>
+        {reparseAsk && (
+          <div className="mb-4 p-4 rounded-xl border border-orange-500/30 bg-orange-500/5 text-sm text-neutral-300">
+            <p>
+              Durumu <b>Yeni</b> olan, profili oluşturulmamış ve kart bilgisi elle kaydedilmemiş siparişlerin notları güncel okuyucuyla
+              tekrar okunur. Seçtiğin Google yorum linkleri korunur. Elle düzeltip kaydettiğin siparişlere dokunulmaz.
+            </p>
+            <div className="mt-3 flex gap-2">
+              <button type="button" onClick={reparse} className="px-4 py-2 rounded-lg bg-orange-500 text-black text-sm font-bold hover:bg-orange-400 cursor-pointer">
+                Evet, yeniden oku
+              </button>
+              <button type="button" onClick={() => setReparseAsk(false)} className="px-4 py-2 rounded-lg border border-neutral-700 text-sm text-neutral-400 hover:text-white cursor-pointer">
+                Vazgeç
+              </button>
+            </div>
+          </div>
+        )}
         {syncMsg && <p className="text-sm text-neutral-300 mb-4">{syncMsg}</p>}
 
         {/* Ana sekmeler */}

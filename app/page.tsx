@@ -10,6 +10,7 @@ import logo from '@/public/logo.jpeg';
 import ScrollFx from '@/components/promo/ScrollFx';
 import NeonWaves, { type Palette } from '@/components/promo/NeonWaves';
 import ProductGrid from '@/components/promo/ProductGrid';
+import TapDemo from '@/components/promo/TapDemo';
 import { getStoreProducts, STORE_URL } from '@/lib/shopierStore';
 
 // Ürünler Shopier mağazasından saatte bir tazelenir; sayfa önbellekten anında açılır
@@ -67,6 +68,7 @@ const FAQ = [
   { q: 'Hangi telefonlarda çalışır?', a: 'NFC’si olan tüm güncel telefonlarda çalışır. iPhone XS ve sonrası modeller kartı otomatik okur; Android telefonlarda NFC ayarının açık olması yeterlidir.' },
   { q: 'Uygulama indirmem gerekiyor mu?', a: 'Hayır. Ne sizin ne de müşterinizin herhangi bir uygulama indirmesine gerek yok.' },
   { q: 'Kartıma hangi bilgiler yüklenir?', a: 'Siparişinizi verirken sipariş notuna Google işletme adınızı, IBAN ve hesap sahibi bilgilerinizi, Instagram kullanıcı adınızı ya da WhatsApp numaranızı yazmanız yeterli. Kartınız bu bilgilerle kurulu olarak gönderilir.' },
+  { q: 'Kart boyutları neler?', a: 'İki boyumuz var: masaya, kasaya ve şeffaf standa uygun 8x8 cm kare kartlar ile cüzdanda taşınabilen kredi kartı boyutunda (8,56 x 5,4 cm) Cüzdan Boy kartvizitler. İkisi de aynı NFC çipi ve aynı premium UV baskıyla, aynı fiyattan.' },
   { q: 'Pil ya da şarj gerekiyor mu?', a: 'Hayır. NFC kartlar pilsizdir; okutan telefonun enerjisiyle çalışır.' },
 ];
 
@@ -74,9 +76,10 @@ const reveal = (d = 0) => ({ 'data-reveal': '', style: { '--d': d } as CSSProper
 
 export default async function HomePage() {
   const products = await getStoreProducts();
+  const walletProducts = products.filter((p) => /c[üu]zdan/i.test(p.title));
 
   return (
-    <main className="relative bg-[#050505] text-white overflow-x-clip selection:bg-orange-500/30">
+    <main className="promo relative bg-[#050505] text-white overflow-x-clip selection:bg-orange-500/30">
       <ScrollFx />
 
       {/* ---------- ÜST MENÜ ---------- */}
@@ -87,6 +90,7 @@ export default async function HomePage() {
             <div className="hidden md:flex items-center gap-7 text-sm text-neutral-400">
               <a href="#kartlar" className="hover:text-white transition-colors">Kartlar</a>
               <a href="#nasil" className="hover:text-white transition-colors">Nasıl Çalışır</a>
+              <a href="#boyutlar" className="hover:text-white transition-colors">Boyutlar</a>
               <a href="#urunler" className="hover:text-white transition-colors">Ürünler</a>
               <a href="#sss" className="hover:text-white transition-colors">SSS</a>
             </div>
@@ -160,7 +164,7 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <a href="#kartlar" aria-label="Aşağı kaydır" className="absolute bottom-6 left-1/2 -translate-x-1/2 text-neutral-500 hover:text-white animate-float">
+        <a href="#kartlar" aria-label="Aşağı kaydır" className="absolute bottom-6 left-1/2 -translate-x-1/2 text-neutral-500 hover:text-white md:animate-float">
           <ChevronDown size={26} />
         </a>
       </section>
@@ -169,7 +173,7 @@ export default async function HomePage() {
       <div className="relative border-y border-white/10 bg-white/[0.02] py-4 overflow-hidden">
         <div className="marquee gap-10 text-sm font-semibold uppercase tracking-[0.25em] text-neutral-500">
           {Array.from({ length: 2 }).flatMap((_, k) =>
-            ['Google Yorum', 'IBAN', 'Instagram', 'WhatsApp', 'Uygulama Yok', 'Pil Yok', 'Ücretsiz Kargo', 'Kurulu Teslim', 'Siyah & Beyaz'].map((t) => (
+            ['Google Yorum', 'IBAN', 'Instagram', 'WhatsApp', 'Uygulama Yok', 'Pil Yok', 'Ücretsiz Kargo', 'Kurulu Teslim', 'Siyah & Beyaz', 'Cüzdan Boy'].map((t) => (
               <span key={`${k}-${t}`} className="flex items-center gap-10 whitespace-nowrap">
                 {t} <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
               </span>
@@ -216,6 +220,13 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ---------- CANLI DEMO ---------- */}
+      <section id="demo" className="relative mx-auto max-w-6xl px-4 py-20 sm:py-28 scroll-mt-20">
+        <div {...reveal(0)}>
+          <TapDemo />
+        </div>
+      </section>
+
       {/* ---------- NASIL ÇALIŞIR ---------- */}
       <section id="nasil" className="relative py-24 sm:py-32 scroll-mt-20 overflow-hidden">
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -242,6 +253,64 @@ export default async function HomePage() {
             ))}
           </ol>
         </div>
+      </section>
+
+      {/* ---------- BOYUTLAR ---------- */}
+      <section id="boyutlar" className="relative mx-auto max-w-6xl px-4 py-24 sm:py-28 scroll-mt-20">
+        <div className="text-center max-w-2xl mx-auto">
+          <p {...reveal(0)} className="text-sm font-bold uppercase tracking-[0.3em] text-orange-400">Boyutlar</p>
+          <h2 {...reveal(1)} className="mt-3 text-4xl sm:text-5xl font-black tracking-tight">İki boy, aynı dokunuş</h2>
+          <p {...reveal(2)} className="mt-4 text-neutral-400">Tezgâhta duran kare kart ya da cüzdanda taşınan kartvizit. Aynı çip, aynı baskı, aynı fiyat.</p>
+        </div>
+
+        {/* Gerçek oranlarla: 80 x 80 mm ve 85,6 x 54 mm (sütunlar eşit genişlikte, şekiller aynı ölçekte) */}
+        <div className="mt-14 grid grid-cols-2 gap-4 sm:gap-10 max-w-3xl mx-auto items-start">
+          {[
+            { name: '8x8 Kare', size: '8 x 8 cm', w: '93.5%', ratio: '1 / 1', text: 'Masaya, kasaya, tezgâha. Şeffaf standla her yerde görünür.' },
+            { name: 'Cüzdan Boy', size: '8,56 x 5,4 cm', w: '100%', ratio: '85.6 / 54', text: 'Kredi kartı boyutu. Kartvizit gibi cepte, cüzdanda taşınır.' },
+          ].map((c, i) => (
+            <div key={c.name} {...reveal(i)} className="flex flex-col items-center text-center">
+              <div className="relative w-full aspect-square flex items-end justify-center">
+                <div
+                  style={{ width: c.w, aspectRatio: c.ratio }}
+                  className="relative rounded-[8%/10%] border border-white/15 bg-gradient-to-br from-neutral-800 via-neutral-900 to-black shadow-[0_30px_60px_-25px_rgba(249,115,22,0.45)] overflow-hidden transition-transform duration-500 hover:-translate-y-1.5"
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(249,115,22,0.25),transparent_45%)]" />
+                  <span className="absolute left-[8%] top-[10%] text-sm sm:text-xl font-black tracking-tighter">TapTap.</span>
+                  <Nfc className="absolute right-[8%] bottom-[10%] w-[18%] h-auto text-orange-400" />
+                </div>
+              </div>
+              <p className="mt-2 text-[11px] sm:text-xs font-mono text-neutral-500">{c.size}</p>
+              <h3 className="mt-3 text-lg sm:text-2xl font-black tracking-tight">{c.name}</h3>
+              <p className="mt-1.5 text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-[16rem]">{c.text}</p>
+            </div>
+          ))}
+        </div>
+
+        {walletProducts.length > 0 && (
+          <div className="mt-14">
+            <p {...reveal(0)} className="text-center text-sm font-semibold text-neutral-300">Cüzdan Boy ürünler</p>
+            <div className="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {walletProducts.slice(0, 4).map((p, i) => (
+                <a
+                  key={p.id}
+                  href={p.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  {...reveal(i)}
+                  className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-2.5 pr-3 hover:border-white/25"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- Shopier CDN görseli */}
+                  <img src={p.image} alt="" loading="lazy" decoding="async" width={64} height={64} className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover shrink-0" />
+                  <span className="min-w-0">
+                    <span className="block text-xs sm:text-sm font-semibold text-neutral-100 line-clamp-2">{p.title.replace(/\s*\(C[üu]zdan Boy\)/i, '')}</span>
+                    <span className="block mt-1 text-sm font-bold text-white">{p.price}</span>
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ---------- ÜRÜNLER (Shopier) ---------- */}

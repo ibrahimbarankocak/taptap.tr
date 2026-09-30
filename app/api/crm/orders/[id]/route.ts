@@ -43,6 +43,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
     if (body.customer_id !== undefined) { sets.push('customer_id = ?'); args.push(body.customer_id); }
 
+    // Kart bilgisi elle kaydedildi: senkronizasyon / toplu yeniden okuma bu siparişin notunu artık ezmez
+    if (body.extracted !== undefined || body.card_type !== undefined) sets.push('edited = 1');
+
     if (!sets.length) return NextResponse.json({ success: false, error: 'Güncellenecek alan yok' }, { status: 400 });
 
     await ensureCrmTables();

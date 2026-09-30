@@ -54,9 +54,10 @@ export type ExtractedFields = {
   card_link?: string; // elle girilen, karta yazılacak link (boşsa otomatik hesaplanır)
   card_types?: CardType[]; // siparişteki tüm kart tipleri (paketler için)
   ibans?: IbanEntry[]; // siparişteki tüm IBAN'lar (çoklu IBAN kartı)
+  phones?: string[]; // WhatsApp paketlerinde notta birden fazla numara (her biri ayrı kart)
 };
 
-type TextField = Exclude<keyof ExtractedFields, 'card_types' | 'ibans' | 'theme'>;
+type TextField = Exclude<keyof ExtractedFields, 'card_types' | 'ibans' | 'theme' | 'phones'>;
 
 export type ParsedNote = {
   card_type: CardType;
@@ -176,7 +177,8 @@ export function normalizeWhatsapp(raw: string): { phone: string; kind: 'mobile' 
 }
 
 // Rakam + ayraç dizileri: "0532.123.45.67", "(0532) 123 45 67", "+90 532-123-4567"
-const PHONE_CANDIDATE_RE = /(?:\+|00)?\(?\d[\d\s.\-()/]{7,20}\d/g;
+// (satır sonunu geçmez: alt alta yazılmış numaralar ayrı kalsın)
+const PHONE_CANDIDATE_RE = /(?:\+|00)?\(?\d[\d \t.\-()/]{7,20}\d/g;
 
 // ---------------------------------------------------------------------------------------------
 // IBAN
@@ -246,16 +248,23 @@ const FILLER = new Set([
   'not', 'siparis', 'ekte', 'asagida', 'tr', 'nfc', 'adet', 'tane', 'beyaz', 'siyah', 'card', 'bilgimiz', 'bilgisi', 'bilgim', 'nfs',
   'adresim', 'adres', 'adresi', 'adresimiz', 'profil', 'profili', 'cok', 'adi', 'konum', 'konumu', 'sayfasi', 'sayfamiz', 'hesabimiz',
   'var', 'varya', 'yok', 'ismi', 'isim', 'harita', 'haritalar', 'maps',
+  // gerçek notlardan: "whatsapp kanal: …", "Telegram: …", "İban isim soyisim", "Hesap Bilgileri"
+  'hat', 'hatti', 'hattim', 'diye', 'cikan', 'gecen', 'yazan', 'adli', 'isimli', 'kanal', 'kanali', 'kanalimiz', 'channel', 'telegram', 'soyisim', 'soyadi', 'soyad', 'bilgileri', 'bilgiler', 'plaka',
 ]);
 
 // Cümle belirten kelimeler: bu kelimeleri içeren satır isim değildir
 const SENTENCE_WORDS = /\b(istiyorum|isteriz|sevinirim|olacak|olacaktir|olsun|yazsin|yazilsin|tanimlanacak|mevcut|attim|bilmiyorum|ederim|yapacagiz|birakabilirsiniz|konusmustuk|geciyor|olarak|ama|varya|tanesinde|linkimiz|linkleri|ekleniyorsa|ekleyelim|olur|kendim|gonderirseniz|hazirlanmasini|bulamadim|ayarlayabilirseniz|anlamadigi|degil|lazim|gerek|sizden|bize|bizim|sizin|arayip|burdan|oradan|tikladim|yerine|kontrol|etmenizi|olan|yazan|ayri|diger|digerini|kisisel|hediye|yaptiriyorum|arkadasima|bos|sekilde|dm|uzerinde|konum|adresi|adres|mah|mahallesi|cad|caddesi|sok|sokak|no:)\b/;
 
-const BUSINESS_WORDS = /\b(kafe|cafe|coffee|kahve|restoran|restaurant|lokanta|lokantasi|kuafor|kuaforu|berber|berberi|guzellik|beauty|market|marketi|bakkal|eczane|eczanesi|doner|kebap|kebab|pide|pizza|burger|firin|pastane|pastanesi|unlu|avm|ltd|sti|a\.?s|insaat|emlak|oto|otomotiv|yikama|tamir|servis|gida|tekstil|butik|magaza|magazasi|kuyumcu|kuyumculuk|mucevherat|optik|klinik|klinigi|poliklinigi|dis|hastane|studyo|studio|ajans|mobilya|elektrik|elektronik|nakliyat|turizm|otel|pansiyon|cicek|cicekcilik|organizasyon|sanayi|ticaret|koftecisi|kofteci|tatlici|tantuni|cigkofte|spor|fitness|gym|club|kulubu|dernek|vakfi|okulu|kurs|kursu|akademi|sigorta|muhasebe|hukuk|avukatlik|petshop|veteriner|dugun|salonu|salon|tesisleri|home|shop|store|zuccaciye|taksi|iletisim|parfum|atolye|atolyesi|hirdavat|aksesuar|perakende|grup|limited|sirketi|sirket|ticaret|yazilim|garage|garaj|repair|lastik|aktar|pilates|yoga|nail|bar|mutfak|ekmek|abiye|outlet|gold|motor|moto|cars|car|oto|teknik|medikal|saglik|sagligi)\b/;
+const BUSINESS_WORDS = /\b(restorant|hotel|hair|designer|design|yapi|mucevher|sube|subesi|dans|tabela|neon|pastanesi|pastane|avm|tobacco|tabocco|shoes|kuruyemis|mobilya|klinik|kafe|cafe|coffee|kahve|restoran|restaurant|lokanta|lokantasi|kuafor|kuaforu|berber|berberi|guzellik|beauty|market|marketi|bakkal|eczane|eczanesi|doner|kebap|kebab|pide|pizza|burger|firin|pastane|pastanesi|unlu|avm|ltd|sti|a\.?s|insaat|emlak|oto|otomotiv|yikama|tamir|servis|gida|tekstil|butik|magaza|magazasi|kuyumcu|kuyumculuk|mucevherat|optik|klinik|klinigi|poliklinigi|dis|hastane|studyo|studio|ajans|mobilya|elektrik|elektronik|nakliyat|turizm|otel|pansiyon|cicek|cicekcilik|organizasyon|sanayi|ticaret|koftecisi|kofteci|tatlici|tantuni|cigkofte|spor|fitness|gym|club|kulubu|dernek|vakfi|okulu|kurs|kursu|akademi|sigorta|muhasebe|hukuk|avukatlik|petshop|veteriner|dugun|salonu|salon|tesisleri|home|shop|store|zuccaciye|taksi|iletisim|parfum|atolye|atolyesi|hirdavat|aksesuar|perakende|grup|limited|sirketi|sirket|ticaret|yazilim|garage|garaj|repair|lastik|aktar|pilates|yoga|nail|bar|mutfak|ekmek|abiye|outlet|gold|motor|moto|cars|car|oto|teknik|medikal|saglik|sagligi)\b/;
 
 const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.]+/g;
 const URL_RE = /(?:https?:\/\/|www\.)[^\s,;<>"]+|\b(?:g\.page|maps\.app\.goo\.gl|goo\.gl|share\.google|instagram\.com|wa\.me)\/[^\s,;<>"]+/gi;
-const HANDLE = /[A-Za-z0-9._]{2,30}/;
+// Kullanıcı adı: müşteriler Türkçe harf / büyük harfle yazabiliyor ("DÖNERCY_"), sonra igHandle ile düzeltilir
+const HANDLE = /[A-Za-z0-9._çğıöşüÇĞİÖŞÜ]{2,30}/;
+// Instagram kullanıcı adları küçük harf ve ASCII: "DÖNERCY_" -> "donercy_"
+const igHandle = (h: string) => fold(h).replace(/[^a-z0-9._]/g, '').replace(/\.$/, '');
+// Kendi hesabımız: müşteri örnek olarak bizim linkimizi yapıştırmış olabilir
+const OWN_INSTAGRAM = new Set(['taptap.tr']);
 
 const isFillerWord = (w: string) => FILLER.has(fold(w).replace(/[^a-z]/g, ''));
 
@@ -317,9 +326,9 @@ function splitBusinessAndPerson(s: string): { business?: string; person?: string
 
 type Label = { key: TextField; re: RegExp };
 const LABELS: Label[] = [
-  { key: 'account_holder', re: /(?:hesap\s*sahibi(?:nin)?|iban\s*sahibi|iban\s*(?:isim|ismi|adi)|alici|hesap\s*adi|hesap\s*ismi)(?:\s*(?:adi\s*soyadi|ad\s*soyad|adi|ismi|isim))?(?![a-z])/g },
+  { key: 'account_holder', re: /(?:hesap\s*sahibi(?:nin)?|iban\s*sahibi|iban\s*(?:isim|ismi|adi)(?:\s*soy(?:isim|adi|ad))?|alici|hesap\s*adi|hesap\s*ismi)(?:\s*(?:adi\s*soyadi|ad\s*soyad|adi|ismi|isim))?(?![a-z])/g },
   // (?![a-z]): etiket tam kelime olmalı — "…Limited Şirketi" içindeki "şirket" etiket sanılmasın
-  { key: 'business_name', re: /(?:(?:(?:isletme|isetlme|isleme)(?:nin)?|firma(?:nin)?|dukkan(?:in)?|magaza(?:nin)?|sirket(?:in)?|kurum)(?:\s*(?:adi|ismi|unvani))?|kartta\s*(?:yazacak|yazilacak|yazsin)\s*(?:isim|baslik|yazi)?|baslik)(?![a-z])/g },
+  { key: 'business_name', re: /(?:(?:(?:isletme|isetlme|isleme|isteme|istetme)(?:nin)?|firma(?:nin)?|dukkan(?:in)?|magaza(?:nin)?|sirket(?:in)?|kurum)(?:\s*(?:adi|ismi|unvani))?|kartta\s*(?:yazacak|yazilacak|yazsin)\s*(?:isim|baslik|yazi)?|baslik)(?![a-z])/g },
   { key: 'job_title', re: /(?:unvan(?:i|im)?|meslek(?:i|im)?|pozisyon(?:u|um)?|gorev(?:i|im)?)(?![a-z])/g },
   { key: 'full_name', re: /(?:ad[\s\-]*soyad(?:i|im)?|adi\s*soyadi|isim\s*soyisim|ismim|adim)(?=[\s:=\-]|$)|(?:isim|ad)(?=\s*[:=])/g },
 ];
@@ -364,7 +373,7 @@ export function parseOrderNote(
     const full = /^https?:/i.test(url) ? url : `https://${url}`;
     const f = fold(url);
     const insta = url.match(/instagram\.com\/([\w.]+)/i);
-    if (insta) fields.instagram ??= insta[1].replace(/\.$/, '');
+    if (insta && !OWN_INSTAGRAM.has(igHandle(insta[1]))) fields.instagram ??= igHandle(insta[1]);
     else if (/search\.google\.com\/local\/writereview|g\.page\/r\/[\w-]+\/review/.test(f)) fields.google_review ??= full;
     else if (/share\.google|maps\.app\.goo\.gl|goo\.gl\/maps|g\.page|google\.[a-z.]+\/maps|maps\.google/.test(f)) fields.google_link ??= full;
     else if (/wa\.me|whatsapp\.com/.test(f)) fields.whatsapp_link ??= full;
@@ -413,7 +422,10 @@ export function parseOrderNote(
     if (phones[0].kind === 'landline') warnings.push('Sabit hat numarası: WhatsApp Business kullanılıyorsa çalışır, kontrol et');
     if (phones[0].kind === 'foreign') warnings.push('Yabancı numara (Türkiye dışı), kontrol et');
   }
-  if (phones.length > 1) warnings.push(`Notta ${phones.length} farklı telefon var, ilki alındı`);
+  if (phones.length > 1) {
+    fields.phones = phones.map((p) => p.phone);
+    warnings.push(`Notta ${phones.length} farklı telefon var — her numara için ayrı kart linki aşağıda`);
+  }
 
   // Satırlar (konumlar orijinal metinle aynı)
   const lines: { text: string; start: number }[] = [];
@@ -446,7 +458,13 @@ export function parseOrderNote(
     v = v.replace(/^((?:haritalar\S*|harita\S*|maps|yorum\S*|ad[ıi]\S*|isim\S*|ism\S*|hesab\S*|i[çc]in|nfc|card|kart\S*|i[şs]letme\S*|yazan|profil\S*|sayfa\S*|konum\S*|link\S*|de|da)(?!\p{L})\s*[:.=\-]*\s*)+/iu, '');
     v = v.replace(/\s+olarak\s+ge[çc]iyor.*$/i, '').replace(/\s+\S+\s+olan\b.*$/i, '').replace(/\/.*$/, ''); // "... bornovada olan"
     v = trimFiller(cleanName(v));
-    if (!v && lines[i + 1] && isTitleLike(cleanName(lines[i + 1].text)) && !/@|https?:/.test(lines[i + 1].text)) {
+    // Etiket sonda: "ES Kırtasiye- Google"
+    if (!v) {
+      const before = trimFiller(cleanName(lines[i].text.slice(0, g.index!).replace(/[\s\-:(]+$/, '')));
+      if (before && isTitleLike(before) && !/https?:|@/.test(before)) v = before;
+    }
+    const nextIsOtherLabel = (t: string) => /\b(?:i[a-z]{1,5}gr?am|insta|ins|ig|whats?app|wp|tel|iban)\b/.test(fold(t));
+    if (!v && lines[i + 1] && isTitleLike(cleanName(lines[i + 1].text)) && !/@|https?:/.test(lines[i + 1].text) && !nextIsOtherLabel(lines[i + 1].text)) {
       v = cleanName(lines[i + 1].text);
       setLine(i + 1, '');
     }
@@ -457,19 +475,37 @@ export function parseOrderNote(
   }
 
   // 5) Instagram kullanıcı adı: "İnstagram : handle", "ins: handle", "handle İnstagram", "@handle"
+  // Etiketli tüm Instagram satırları işlenir (kullanıcı adı zaten linkten bulunmuş olsa da satır isim sanılmasın)
+  // Açık "@handle" en güçlü işarettir (etiket cümle içinde geçse bile: "instagram adresimiz tanımlanacak / @cigkoftem")
+  const fromAt = !fields.instagram;
   if (!fields.instagram) {
-    for (let i = 0; i < lines.length && !fields.instagram; i++) {
+    const at = work.match(/(?:^|[\s:(])@\s?([A-Za-z0-9._çğıöşüÇĞİÖŞÜ]{2,30})/);
+    if (at && !OWN_INSTAGRAM.has(igHandle(at[1]))) {
+      fields.instagram = igHandle(at[1]);
+      const idx = work.indexOf(at[0]);
+      blank({ start: idx, end: idx + at[0].length });
+    }
+  }
+  const igHandles = new Set<string>(fields.instagram ? [fields.instagram] : []);
+  {
+    for (let i = 0; i < lines.length; i++) {
       const l = lines[i].text;
       const f = fold(l);
-      const lab = f.match(/\b(?:i[a-z]{1,5}gr?am[a-z]*|insta|ins|ig)\b/);
+      // "micro_pizza kullanıcı adı" (Instagram kartında etiket sonda, "İnstagram" başka satırda)
+      const lab = f.match(/\b(?:i[a-z]{1,5}gr?am[a-z]*|insta|ins|ig)\b/) ?? (has('instagram') ? f.match(/\bkullanici\s*adi\b/) : null);
       if (lab) {
         // "instagram/handle", "İnstagram: handle", "instagram adı “handle”"
         let v = l.slice(lab.index! + lab[0].length).replace(/^[\s:=/\-.>]+/, '');
-        v = valueAfterLabel(v, 0).trim();
+        // "insta @handle mail: …" -> @handle doğrudan değerdir; sonraki ':' ye atlama
+        if (!v.startsWith('@')) v = valueAfterLabel(v, 0);
+        v = v.trim();
+        v = v.replace(/^(?:i[çc]in(?:\s+d[ea])?\s+)/i, '') // "İnstagram için de sahin.yap.dek"
         v = v.replace(/^(ad[ıi]\S*|adres\S*|hesab\S*|sayfa\S*|kullan[ıi]c[ıi]\s*ad[ıi])\s*[:.=\-]*\s*/i, '').replace(/^["'“”]+/, '').replace(/^@/, '');
         let handle = v.match(new RegExp('^' + HANDLE.source))?.[0];
+        // Cümle içinde geçen etiket ("instagram adresimiz tanımlanacak …"): ':' yoksa ve ardından başka kelime geliyorsa değer değildir
+        if (handle && !l.startsWith('@', l.indexOf(v)) && !/[:=]/.test(l) && /\p{L}/u.test(v.slice(handle.length))) handle = undefined;
         // "handle İnstagram" (etiket sonda)
-        if (!handle) handle = l.slice(0, lab.index!).trim().match(new RegExp(HANDLE.source + '$'))?.[0];
+        if (!handle) handle = l.slice(0, lab.index!).replace(/[\s\-:]+$/, '').match(new RegExp('(?:^|\\s)@?(' + HANDLE.source + ')$'))?.[1];
         // değer sonraki satırlarda (arada boş satır olabilir)
         for (let k = i + 1; !handle && k < Math.min(lines.length, i + 4); k++) {
           const t = lines[k].text.trim();
@@ -478,20 +514,19 @@ export function parseOrderNote(
           if (handle) setLine(k, '');
           break;
         }
-        if (handle && handle.length >= 4 && !FILLER.has(fold(handle)) && /[a-z]/i.test(handle)) {
-          fields.instagram = handle.replace(/\.$/, '');
-          setLine(i, '');
+        const h = handle ? igHandle(handle) : '';
+        // @handle zaten bulunduysa ':' olmadan yazılmış etiket satırı cümledir, değer sayılmaz
+        const prose = fromAt && fields.instagram && !/[:=/]/.test(l) && !/[“"]/.test(l);
+        if (!prose && h.length >= 4 && !FILLER.has(h) && /[a-z]/.test(h) && !OWN_INSTAGRAM.has(h)) {
+          fields.instagram ??= h;
+          igHandles.add(h);
         }
+        setLine(i, '');
       }
     }
-    if (!fields.instagram) {
-      const at = work.match(/(?:^|[\s:(])@\s?([A-Za-z0-9._]{2,30})/);
-      if (at) {
-        fields.instagram = at[1].replace(/\.$/, '');
-        const idx = work.indexOf(at[0]);
-        blank({ start: idx, end: idx + at[0].length });
-      }
-    }
+    if (igHandles.size > 1) warnings.push(`Notta ${igHandles.size} farklı Instagram hesabı var (${[...igHandles].join(', ')}), ilki alındı`);
+  }
+  if (!fields.instagram) {
     // Instagram kartı var ama etiket yok: tek başına "gardrobeankara" gibi bir satır kullanıcı adıdır
     if (!fields.instagram && has('instagram')) {
       const i = lines.findIndex((l) => /^[a-z0-9._]{3,30}$/.test(l.text.trim()) && /[a-z]/.test(l.text) && !FILLER.has(l.text.trim()));
@@ -564,7 +599,8 @@ export function parseOrderNote(
   // Satırı temizlenmiş aday parçalara böl
   const candidates = (s: string) =>
     s
-      .split(/[,;|]+|\s\/\s|\s-\s|\s{3,}/)
+      // Küçük harfle başlayan kelimeden önceki 2 boşluk da ayırır: "Muhyettin Aksoy  ek olarak…" -> isim ile cümle ayrılsın
+      .split(/[,;|]+|\s\/\s|\s-\s|\s{3,}|\s{2}(?=\p{Ll})/u)
       .map((p) => trimFiller(cleanName(p)))
       // Instagram/WhatsApp etiketi içeren parça isim değildir ("İnsatagram ismi X" gibi yazım hataları dahil)
       .filter((p) => p && /\p{L}{2,}/u.test(p) && !isSentence(p) && !/\b(?:i?n?s[a-z]{0,3}t?a?gr?am\S*|insta|whats?\S*|watsap\S*|kaynak)\b/.test(fold(p)));
@@ -598,14 +634,28 @@ export function parseOrderNote(
 
     const tryLine = (i: number) => {
       if (i < 0 || i >= lines.length || entry.holder) return;
-      for (const c of candidates(lines[i].text)) {
+      const cs = candidates(lines[i].text);
+      for (const c of cs) {
         const split = splitBusinessAndPerson(c);
         if (split.person) {
           entry.holder = tidyCase(split.person);
-          if (split.business && !fields.business_name) fields.business_name = tidyCase(split.business);
+          // aynı satırdaki işletme adı kaybolmasın: "Mady Dans Ataköy Şubesi … ECE KORUCUOĞLU IBAN: TR…"
+          const biz = split.business ?? cs.map((x) => splitBusinessAndPerson(x)).find((x) => x.business && !x.person)?.business;
+          if (biz && !fields.business_name) fields.business_name = tidyCase(biz);
           lines[i].text = '';
           return;
         }
+      }
+    };
+    // IBAN'ın hemen altındaki şirket unvanı hesap sahibidir (şirket hesabı, ör. "… Ltd. Şti.")
+    const companyBelow = () => {
+      for (let i = li + 1; i < nextIban && !entry.holder; i++) {
+        const c = candidates(lines[i].text)[0];
+        if (c && isBusiness(c) && isTitleLike(c.replace(/[.]/g, ' '))) {
+          entry.holder = tidyCase(c);
+          if (!fields.business_name) fields.business_name = entry.holder;
+          lines[i].text = '';
+        } else if (c) break;
       }
     };
     tryLine(li); // aynı satır: "TR… Mehmet Demir"
@@ -615,21 +665,16 @@ export function parseOrderNote(
       for (let i = li + 1; i < nextIban && !entry.holder; i++) tryLine(i);
     } else {
       for (let i = li + 1; i < nextIban && !entry.holder; i++) tryLine(i); // altındaki satırlar
+      // Altında kişi yoksa ama şirket unvanı varsa hesap şirketindir — üstteki işletme adına geçmeden önce
+      companyBelow();
       for (let i = li - 1; i > prevIban && !entry.holder; i--) tryLine(i); // üstündeki satırlar
     }
-    // Kişi adı yoksa: IBAN'ın hemen altındaki şirket adı hesap sahibidir (şirket hesabı, ör. "… Ltd. Şti.")
-    for (let i = li + 1; i < nextIban && !entry.holder; i++) {
-      const c = candidates(lines[i].text)[0];
-      if (c && isBusiness(c) && isTitleLike(c.replace(/[.]/g, ' '))) {
-        entry.holder = tidyCase(c);
-        if (!fields.business_name) fields.business_name = entry.holder;
-        lines[i].text = '';
-      } else if (c) break;
-    }
+    companyBelow();
     return entry;
   });
 
   // 8) Etiketsiz kalan satırlar: işletme adı ve kişi adı
+  let titleFallback: string | undefined;
   for (const l of lines) {
     for (const c of candidates(l.text)) {
       const split = splitBusinessAndPerson(c);
@@ -643,12 +688,16 @@ export function parseOrderNote(
           fields[key] = tidyCase(split.person);
           guessed.push(key === 'account_holder' ? 'hesap sahibi' : 'ad soyad');
         }
-      } else if (!split.business && !fields.business_name && isTitleLike(c) && c.split(' ').length <= 5 && (has('iban') || has('google'))) {
-        // İşletme kelimesi olmayan başlık ("Nazar Züccaciye" gibi değil, "Dünyamarketim" gibi)
-        fields.business_name = tidyCase(c);
-        guessed.push('işletme adı');
+      } else if (!split.business && !titleFallback && isTitleLike(c) && c.split(' ').length <= 5 && (has('iban') || has('google'))) {
+        // İşletme kelimesi olmayan başlık ("Nazar Züccaciye" gibi değil, "Dünyamarketim" gibi).
+        // Sona bırakılır: notta işletme kelimeli satır varsa o kazanır ("Manisa/ Demirci" / "Kümeçınarlar uçar restorant")
+        titleFallback = c;
       }
     }
+  }
+  if (!fields.business_name && titleFallback) {
+    fields.business_name = tidyCase(titleFallback);
+    guessed.push('işletme adı');
   }
 
   // Hesap sahibi bulunamayan IBAN'lar: notta şirket unvanı varsa hesap şirkete aittir
@@ -684,15 +733,43 @@ export function parseOrderNote(
     fields.account_holder = fields.full_name;
     delete fields.full_name;
   }
-  // Google adı yoksa işletme adını kullan
-  if (has('google') && !fields.google_name && fields.business_name) fields.google_name = fields.business_name;
+  // Google adı yoksa: işletme adı, yoksa uzun adres metninde işletme kelimesiyle biten ifade, yoksa kişi adı
+  if (has('google') && !fields.google_name) {
+    if (fields.business_name) fields.google_name = fields.business_name;
+    else {
+      // "…Mah. 12. Sokak No:5 Biberzade çiğköfte" -> "Biberzade Çiğköfte"
+      for (const raw of text.split('\n')) {
+        const words = raw.replace(/[,;:()]/g, ' ').split(/\s+/).filter(Boolean);
+        let last = -1;
+        words.forEach((w, i) => BUSINESS_WORDS.test(fold(w)) && (last = i));
+        if (last < 0) continue;
+        let first = last;
+        while (first > 0 && last - first < 3 && /^\p{L}[\p{L}'&.-]*$/u.test(words[first - 1]) && !isFillerWord(words[first - 1]) && !/^(?:mah|mahallesi|sok|sokak|cad|caddesi|bulvari|no|apt)\.?$/.test(fold(words[first - 1]))) first--;
+        const phrase = words.slice(first, last + 1).join(' ');
+        if (phrase.length >= 4) {
+          fields.google_name = tidyCase(phrase);
+          fields.business_name ??= fields.google_name;
+          guessed.push('Google işletme adı');
+          break;
+        }
+      }
+      if (!fields.google_name && fields.full_name && !has('iban') && !has('premium')) {
+        fields.google_name = fields.full_name;
+        guessed.push('Google işletme adı');
+      }
+    }
+  }
+  // Çok işletmeli not ("Beyaz: X / Siyah: Y"): ilki alındı, uyar
+  if (has('google') && /\bbeyaz\s*:/.test(fold(text)) && /\bsiyah\s*:/.test(fold(text))) {
+    warnings.push('Notta birden fazla işletme var (Beyaz/Siyah), ilki alındı — diğeri için ayrı kart hazırla');
+  }
 
   // 9) Tipe göre eksik kontrolü
   if (has('whatsapp') && !fields.phone && !fields.whatsapp_link) warnings.push('Notta telefon numarası bulunamadı');
   if (has('iban')) {
     if (!entries.length) warnings.push('Notta IBAN bulunamadı');
     if (!fields.account_holder) {
-      fields.account_holder = opts.buyerName;
+      fields.account_holder = opts.buyerName?.replace(/\s+/g, ' ').trim();
       if (fields.account_holder) warnings.push('Hesap sahibi notta yok, alıcı adı kullanıldı');
     }
   }

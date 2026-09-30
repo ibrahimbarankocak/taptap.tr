@@ -20,12 +20,16 @@ export async function ensureCrmTables() {
     ['status', "TEXT DEFAULT 'new'"],
     ['customer_id', 'INTEGER'],
     ['raw', 'TEXT'],
+    // 1 = admin kart bilgilerini elle düzenledi (not yeniden okunmaz); 0 = otomatik; NULL = bu sütundan önceki kayıt
+    ['edited', 'INTEGER'],
   ]);
 }
 
 // Siparişi kaydeder. Yeni siparişte notu ayrıştırır; var olan siparişte sadece Shopier
 // alanlarını günceller — elle düzenlenen kart bilgileri / durum / bağlı profil korunur.
 // Siparişi kaydeden SQL ifadesi (toplu kayıt için ayrı)
+const AUTO = "shopier_orders.edited = 0 AND shopier_orders.customer_id IS NULL AND shopier_orders.status = 'new'";
+
 export function upsertOrderStatement(order: ShopierOrder) {
   const ship = order.shippingInfo || {};
   const bill = order.billingInfo || {};
@@ -37,9 +41,13 @@ export function upsertOrderStatement(order: ShopierOrder) {
 
   return {
     sql: `INSERT INTO shopier_orders
-            (id, date_created, buyer_name, buyer_phone, buyer_email, city, total, currency, note, card_type, extracted, warnings, status, raw)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?)
+            (id, date_created, buyer_name, buyer_phone, buyer_email, city, total, currency, note, card_type, extracted, warnings, status, raw, edited)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, 0)
           ON CONFLICT(id) DO UPDATE SET
+            -- elle düzenlenmemiş siparişlerde not güncel okuyucuyla yeniden okunur
+            card_type = CASE WHEN ${AUTO} THEN excluded.card_type ELSE shopier_orders.card_type END,
+            extracted = CASE WHEN ${AUTO} THEN excluded.extracted ELSE shopier_orders.extracted END,
+            warnings = CASE WHEN ${AUTO} THEN excluded.warnings ELSE shopier_orders.warnings END,
             date_created = excluded.date_created,
             buyer_name = excluded.buyer_name,
             buyer_phone = excluded.buyer_phone,
@@ -115,3 +123,45 @@ export function rowToOrder(row: Record<string, unknown>) {
 }
 
 export type CrmOrder = ReturnType<typeof rowToOrder>;
+
+type Extracted = ReturnType<typeof parseOrderNote>['fields'] & {
+  google_review?: string;
+  card_link?: string;
+  ibans?: { customer_id?: number; slug?: string }[];
+};
+
+// Yeniden okunan nota adminin eklediklerini taşır: seçilen Google yorum linki, elle link, IBAN profil bağlantıları
+export function mergeReparsed(old: Extracted, fresh: Extracted): Extracted {
+  const ibans = fresh.ibans?.map((e, i) => ({ ...e, customer_id: old.ibans?.[i]?.customer_id, slug: old.ibans?.[i]?.slug }));
+  const out: Extracted = { ...fresh, ...(ibans ? { ibans } : {}) };
+  if (old.google_review) out.google_review = old.google_review;
+  if (old.card_link) out.card_link = old.card_link;
+  return out;
+}
+
+// Toplu yeniden okuma: elle düzenlenmemiş, profili oluşturulmamış, durumu "yeni" olan siparişler
+export async function reparseOrders(): Promise<{ checked: number; changed: number }> {
+  await ensureCrmTables();
+  const rows = (
+    await db.execute(
+      "SELECT id, note, raw, extracted, warnings, card_type FROM shopier_orders WHERE COALESCE(edited, 0) = 0 AND customer_id IS NULL AND COALESCE(status, 'new') = 'new'"
+    )
+  ).rows;
+  const stmts = [];
+  for (const r of rows) {
+    const raw: ShopierOrder = JSON.parse(String(r.raw || '{}'));
+    const ship = raw.shippingInfo || {};
+    const bill = raw.billingInfo || {};
+    const buyerName = [ship.firstName || bill.firstName, ship.lastName || bill.lastName].filter(Boolean).join(' ');
+    const p = parseOrderNote(String(r.note || ''), { productTitles: (raw.lineItems || []).map((li) => li.title), buyerName });
+    const extracted = JSON.stringify(mergeReparsed(JSON.parse(String(r.extracted || '{}')), p.fields));
+    const warnings = JSON.stringify(p.warnings);
+    if (extracted === r.extracted && warnings === r.warnings && p.card_type === r.card_type) continue;
+    stmts.push({
+      sql: 'UPDATE shopier_orders SET extracted = ?, warnings = ?, card_type = ? WHERE id = ? AND COALESCE(edited, 0) = 0',
+      args: [extracted, warnings, p.card_type, String(r.id)],
+    });
+  }
+  for (let i = 0; i < stmts.length; i += 50) await db.batch(stmts.slice(i, i + 50), 'write');
+  return { checked: rows.length, changed: stmts.length };
+}

@@ -1,5 +1,5 @@
 import db from '@/lib/db';
-import { Users, UserPlus, ArrowRight, ShieldCheck, ShoppingBag, Nfc, BarChart3, Star, Handshake } from 'lucide-react';
+import { Users, UserPlus, ArrowRight, ShieldCheck, ShoppingBag, Nfc, BarChart3, Star, Handshake, Boxes } from 'lucide-react';
 import Link from 'next/link';
 import LogoutButton from '@/components/LogoutButton';
 
@@ -154,6 +154,22 @@ export default async function AdminDashboardPage() {
               <div>
                 <h4 className="font-bold text-base text-neutral-200 group-hover:text-white">IBAN Kartı Ortaklığı</h4>
                 <p className="text-xs text-neutral-400 mt-0.5">Basılan kart, alınan ödemeler ve bekleyen tutar</p>
+              </div>
+            </div>
+            <ArrowRight size={20} className="text-neutral-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
+          </Link>
+
+          <Link
+            href="/admin/stok"
+            className="press sm:col-span-2 flex items-center justify-between p-6 bg-neutral-900 border border-neutral-800 rounded-3xl hover:border-neutral-600 hover:bg-neutral-900/80 hover:-translate-y-0.5 hover:shadow-[0_20px_50px_-20px_rgba(255,255,255,0.15)] group shadow-lg"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-neutral-950 border border-neutral-800 rounded-2xl text-emerald-400 group-hover:scale-105 transition-transform">
+                <Boxes size={24} />
+              </div>
+              <div>
+                <h4 className="font-bold text-base text-neutral-200 group-hover:text-white">Stok & Maliyet</h4>
+                <p className="text-xs text-neutral-400 mt-0.5">Boş kart ve stand stoğu, sipariş başı kâr, aylık rapor</p>
               </div>
             </div>
             <ArrowRight size={20} className="text-neutral-500 group-hover:text-white group-hover:translate-x-1 transition-all" />

@@ -10,12 +10,13 @@ const TABS = [
   { key: 'google', label: 'Google Yorum' },
   { key: 'instagram', label: 'Instagram' },
   { key: 'whatsapp', label: 'WhatsApp' },
+  { key: 'cuzdan', label: 'Cüzdan Boy' },
 ] as const;
 
 type TabKey = (typeof TABS)[number]['key'];
 
 // Ürün adından kategori: "+" içeren ya da "Paket" yazan ürünler paket
-function categoryOf(title: string): TabKey {
+function categoryOf(title: string): Exclude<TabKey, 'cuzdan'> {
   const t = title.toLocaleLowerCase('tr');
   if (title.includes('+') || /paket/.test(t)) return 'paket';
   if (/iban/.test(t)) return 'iban';
@@ -27,7 +28,8 @@ function categoryOf(title: string): TabKey {
 
 export default function ProductGrid({ products, storeUrl }: { products: StoreProduct[]; storeUrl: string }) {
   const [tab, setTab] = useState<TabKey>('all');
-  const visible = products.filter((p) => tab === 'all' || categoryOf(p.title) === tab);
+  // "Cüzdan Boy" bir boyut filtresi: kategoriden bağımsız, adında Cüzdan geçen tüm ürünler
+  const visible = products.filter((p) => tab === 'all' || (tab === 'cuzdan' ? /c[üu]zdan/i.test(p.title) : categoryOf(p.title) === tab));
 
   return (
     <div>

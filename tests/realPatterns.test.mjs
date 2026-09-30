@@ -102,7 +102,7 @@ test('Instagram: farklı yazımlar', () => {
   assert.equal(ig('İntagram adresi : genclikhediyelik.esya'), 'genclikhediyelik.esya');
   assert.equal(ig('ins: kanvasevim'), 'kanvasevim');
   assert.equal(ig('instagram/umkaplastikmelamin'), 'umkaplastikmelamin');
-  assert.equal(ig('Sematalip_friseur  İnstagram'), 'Sematalip_friseur');
+  assert.equal(ig('Sematalip_friseur  İnstagram'), 'sematalip_friseur');
   assert.equal(ig('İnstagram: \n\nlepa.cumhuriyet'), 'lepa.cumhuriyet');
   assert.equal(ig('1.instagram adı “merter_furry34”'), 'merter_furry34');
   assert.equal(ig('gardrobeankara'), 'gardrobeankara');
@@ -133,4 +133,37 @@ test('mevcut TapTap kartı linki', () => {
 
 test('HTML kodları çözülür', () => {
   assert.equal(P('Google: Salon Ayla Güzellik &amp; Bayan Kuaförü', 'Google NFC Yorum Kartı').fields.google_name, 'Salon Ayla Güzellik & Bayan Kuaförü');
+});
+
+test('Son siparişlerden düzeltmeler (2026-09-30)', () => {
+  // Türkçe harfli / büyük harfli kullanıcı adı, bizim hesabımız sayılmaz
+  const r1 = P('DÖNERCY_ instagram\nhttps://instagram.com/taptap.tr', 'Instagram NFC Kartı');
+  assert.equal(r1.fields.instagram, 'donercy_');
+  // "Kanal" / "Telegram" işletme adı değildir
+  assert.notEqual(P('Kanal linki: https://whatsapp.com/channel/abc', 'Whatsapp NFC Kartı').fields.business_name, 'Kanal');
+  // "IBAN isim soyisim:" etiketi hesap sahibidir
+  const r2 = P('TR33 0006 1005 1978 6457 8413 26\nIban isim soyisim: Ahmet Yılmaz', 'IBAN NFC Kartı');
+  assert.equal(r2.fields.account_holder, 'Ahmet Yılmaz');
+  // Etiketli Instagram satırı işletme adı olmaz
+  const r3 = P('İG kullanıcı adı : bhveteriner', 'Google+Instagram NFC Kartı');
+  assert.equal(r3.fields.instagram, 'bhveteriner');
+  assert.notEqual(r3.fields.business_name, 'bhveteriner');
+  // İki boşlukla ayrılan açıklama isimden ayrılır
+  const r4 = P('Muhyettin Aksoy  ek olarak kartın arkasına logo', 'Premium NFC Kartvizit');
+  assert.equal(r4.fields.full_name, 'Muhyettin Aksoy');
+  // Birden fazla WhatsApp numarası: hepsi tutulur
+  const r5 = P('0532 111 22 33\n0533 444 55 66\n0544 777 88 99', "3'lü Whatsapp NFC Kartı");
+  assert.equal(r5.fields.phones.length, 3);
+  // Google kartı: uzun adresin sonundaki işletme adı
+  const r6 = P('Yeni Mahalle 12. Sokak No:5 Biberzade çiğköfte', 'Google NFC Yorum Kartı');
+  assert.match(r6.fields.google_name, /Biberzade Çiğköfte/i);
+});
+
+test('Etiket sonda / "için de" / "kullanıcı adı" yazımları', () => {
+  const r1 = P('ES Kırtasiye- Google\nes.kirtasiiye - ınstagram', 'Google+Instagram NFC Kartı');
+  assert.equal(r1.fields.google_name, 'ES Kırtasiye');
+  assert.equal(r1.fields.instagram, 'es.kirtasiiye');
+  assert.equal(P('İnstagram için de sahin.yap.dek', 'Instagram NFC Kartı').fields.instagram, 'sahin.yap.dek');
+  assert.equal(P('İnstagram\n\nMICRO PIZZA isim\nmicro_pizza kullanıcı adı', 'Google+Instagram NFC Kartı').fields.instagram, 'micro_pizza');
+  assert.equal(P('Manisa/ Demirci \nKümeçınarlar uçar restorant', 'Google NFC Yorum Kartı').fields.google_name, 'Kümeçınarlar uçar restorant');
 });
